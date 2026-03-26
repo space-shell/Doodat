@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "dodaat",
+    "slug": "dodaat",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E8E0D8"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dodaat.app"
+    },
+    "android": {
+      "package": "com.dodaat.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E8E0D8",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-av",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#C4A882"
+        }
+      ]
+    ]
+  }
+}
