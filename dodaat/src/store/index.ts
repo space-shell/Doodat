@@ -175,7 +175,12 @@ export const useDoodaatStore = create<DoodaatState>((set, get) => ({
       }
     }
 
-    set({ keypair, profile, dailyState, deck, goldCard, currentIndex: 0, initialized: true });
+    // Restore deck position from the number of outcomes already recorded today.
+    // Each swipeCard call appends exactly one outcome, so outcomes.length === the index
+    // we should resume from. New/reset daily states start at 0.
+    const currentIndex = dailyState?.outcomes?.length ?? 0;
+
+    set({ keypair, profile, dailyState, deck, goldCard, currentIndex, initialized: true });
   },
 
   swipeCard: async (direction) => {
@@ -204,7 +209,7 @@ export const useDoodaatStore = create<DoodaatState>((set, get) => ({
 
       // Check if accountability prompt needed (3 incompletes)
       const skipped = updatedDaily.outcomes.filter((o) => o.swipeDirection === 'skip').length;
-      const shouldPrompt = skipped >= 3 && !updatedDaily.voiceNoteSubmitted;
+      const shouldPrompt = skipped === 3 && !updatedDaily.voiceNoteSubmitted;
 
       set({ dailyState: updatedDaily });
 

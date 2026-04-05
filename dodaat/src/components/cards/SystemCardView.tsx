@@ -72,11 +72,13 @@ function WelcomeCard({ onSwipe }: { onSwipe: () => void }) {
 
 function WizardCard({ card, onSwipe }: { card: SystemCard; onSwipe: () => void }) {
   const step = (card.payload as Record<string, string>)?.step;
-  const { completeOnboarding, profile, updateProfile } = useDoodaatStore();
+  const { keypair, profile, updateProfile, initializeApp } = useDoodaatStore();
 
   const handleStart = async () => {
     await updateProfile({ onboardingComplete: true });
-    onSwipe();
+    // Rebuild the deck with daily content cards. initializeApp resets currentIndex
+    // to 0 and replaces the wizard deck — no need to call onSwipe() afterwards.
+    if (keypair) await initializeApp(keypair);
   };
 
   if (step === 'allset') {
