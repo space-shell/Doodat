@@ -157,8 +157,11 @@ export const useDoodaatStore = create<DoodaatState>((set, get) => ({
       // Inject onboarding wizard cards
       deck = buildOnboardingDeck();
     } else {
-      // Check if weekly intensity selection is needed
-      const needsIntensity = !weekString() || get().needsIntensitySelection();
+      // Check if weekly intensity selection is needed.
+      // Use local profile variable — store's profile is still null at this point.
+      const needsIntensity =
+        !profile.intensitySetAt ||
+        weekString(new Date(profile.intensitySetAt)) !== weekString();
 
       deck = await buildDailyDeck(profile, today, recentIds, dailyState);
 

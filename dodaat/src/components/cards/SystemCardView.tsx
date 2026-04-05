@@ -72,7 +72,12 @@ function WelcomeCard({ onSwipe }: { onSwipe: () => void }) {
 
 function WizardCard({ card, onSwipe }: { card: SystemCard; onSwipe: () => void }) {
   const step = (card.payload as Record<string, string>)?.step;
-  const { completeOnboarding, profile } = useDoodaatStore();
+  const { completeOnboarding, profile, updateProfile } = useDoodaatStore();
+
+  const handleStart = async () => {
+    await updateProfile({ onboardingComplete: true });
+    onSwipe();
+  };
 
   if (step === 'allset') {
     return (
@@ -89,7 +94,7 @@ function WizardCard({ card, onSwipe }: { card: SystemCard; onSwipe: () => void }
           </Text>
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={onSwipe}
+            onPress={handleStart}
           >
             <Text style={styles.primaryButtonText}>Start →</Text>
           </TouchableOpacity>
