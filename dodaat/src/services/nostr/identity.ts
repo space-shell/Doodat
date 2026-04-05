@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools';
 import type { NostrKeypair } from '../../types';
 
@@ -19,6 +20,30 @@ function hexToBytes(hex: string): Uint8Array {
 
 const PRIVATE_KEY_STORE_KEY = 'dodaat_nostr_private_key';
 
+// expo-secure-store is native-only; fall back to localStorage on web
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    }
+    return SecureStore.getItemAsync(key);
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+      return;
+    }
+    await SecureStore.setItemAsync(key, value);
+  },
+  async deleteItem(key: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  },
+};
+
 /**
  * Generate a new Nostr keypair and persist it securely.
  */
@@ -27,7 +52,7 @@ export async function generateAndStoreKeypair(): Promise<NostrKeypair> {
   const privateKeyHex = bytesToHex(secretKey);
   const publicKeyHex = getPublicKey(secretKey);
 
-  await SecureStore.setItemAsync(PRIVATE_KEY_STORE_KEY, privateKeyHex);
+  await storage.setItem(PRIVATE_KEY_STORE_KEY, privateKeyHex);
 
   return { privateKey: privateKeyHex, publicKey: publicKeyHex };
 }
@@ -36,7 +61,7 @@ export async function generateAndStoreKeypair(): Promise<NostrKeypair> {
  * Load the persisted keypair, or generate one if none exists.
  */
 export async function loadOrCreateKeypair(): Promise<NostrKeypair> {
-  const stored = await SecureStore.getItemAsync(PRIVATE_KEY_STORE_KEY);
+  const stored = await storage.getItem(PRIVATE_KEY_STORE_KEY);
 
   if (stored) {
     const secretKey = hexToBytes(stored);
@@ -51,7 +76,7 @@ export async function loadOrCreateKeypair(): Promise<NostrKeypair> {
  * Export the private key as nsec bech32 for the user to back up.
  */
 export async function exportNsec(): Promise<string | null> {
-  const stored = await SecureStore.getItemAsync(PRIVATE_KEY_STORE_KEY);
+  const stored = await storage.getItem(PRIVATE_KEY_STORE_KEY);
   if (!stored) return null;
   const secretKey = hexToBytes(stored);
   return nip19.nsecEncode(secretKey);
@@ -68,5 +93,5 @@ export async function exportNpub(pubkeyHex: string): Promise<string> {
  * Delete the stored keypair (danger: irreversible).
  */
 export async function deleteKeypair(): Promise<void> {
-  await SecureStore.deleteItemAsync(PRIVATE_KEY_STORE_KEY);
+  await storage.deleteItem(PRIVATE_KEY_STORE_KEY);
 }
