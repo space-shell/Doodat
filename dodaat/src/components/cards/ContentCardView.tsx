@@ -90,9 +90,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   domainBar: {
-    height: 4,
+    height: 5,
     width: '100%',
-    opacity: 0.7,
+    opacity: 0.8,
   },
   content: {
     flex: 1,

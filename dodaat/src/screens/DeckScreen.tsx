@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import {
+  Platform,
   View,
   Text,
   TouchableOpacity,
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700' as const,
     color: colors.textPrimary,
-    letterSpacing: -0.5,
+    letterSpacing: 0.5,
   },
   settingsButton: {
     width: 40,
@@ -102,13 +103,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.systemCard,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.shadowDark,
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
     elevation: 4,
     borderWidth: 1,
     borderColor: colors.shadowLight,
+    ...Platform.select({
+      web: { boxShadow: '-2px -2px 5px rgba(255,255,255,0.9), 3px 3px 6px rgba(200,192,178,0.4)' } as any,
+      default: {
+        shadowColor: colors.shadowDark,
+        shadowOffset: { width: 3, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+      },
+    }),
   },
   settingsIcon: {
     fontSize: 16,
@@ -124,6 +130,5 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.tagline,
-    textTransform: 'capitalize',
   },
 });

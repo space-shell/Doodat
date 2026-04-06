@@ -1,13 +1,13 @@
 // ─── Dodaat Neumorphic Design System ─────────────────────────────────────────
-// Warm off-white palette with tactile depth
+// Light beige palette with tactile neumorphic depth
 
 export const colors = {
-  // Primary background surface
-  background: '#E8E0D8',
+  // Primary background surface — light beige
+  background: '#F5F0E8',
 
-  // Neumorphic shadow pair
+  // Neumorphic shadow pair (calibrated to the new base)
   shadowLight: '#FFFFFF',
-  shadowDark: '#C8BDB5',
+  shadowDark: '#C8C0B2',
 
   // Domain colour indicators
   physical: '#8B6F5E',    // warm terracotta
@@ -16,25 +16,25 @@ export const colors = {
 
   // Gold card treatment
   gold: '#C4A882',
-  goldLight: '#E8D5B5',
+  goldLight: '#EDD9B8',
   goldDark: '#A8875A',
 
   // Text
-  textPrimary: '#3D3530',
-  textSecondary: '#7A6F68',
-  textMuted: '#A89F98',
+  textPrimary: '#38322C',
+  textSecondary: '#7A7068',
+  textMuted: '#B0A89E',
   textOnGold: '#5A3E20',
 
   // System / UI
   white: '#FFFFFF',
-  cream: '#F5F0EA',
-  border: '#D4C8C0',
+  cream: '#FDFAF5',
+  border: '#DDD8CE',
 
   // Completion celebratory
   completionGlow: '#C4A882',
 
   // Settings / System cards (slightly recessed)
-  systemCard: '#E0D8D0',
+  systemCard: '#EDE8DE',
 } as const;
 
 export const shadows = {
@@ -152,7 +152,7 @@ export const typography = {
     fontSize: 32,
     fontWeight: '800' as const,
     color: colors.textPrimary,
-    letterSpacing: -1,
+    letterSpacing: 1,
   },
 } as const;
 

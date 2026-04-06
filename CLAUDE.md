@@ -70,5 +70,5 @@ Both must stay green. A red `main` is a P0.
 | Identity | Nostr (`nostr-tools`) + expo-secure-store (native) / localStorage (web) |
 | Audio | expo-av |
 | Gestures | react-native-gesture-handler + react-native-reanimated |
-| Design | Neumorphic — warm off-white `#E8E0D8`, gold `#C4A882` |
+| Design | Neumorphic — light beige `#F5F0E8`, gold `#C4A882` |
 | Backend | Nostr relays (custom event kinds 31000–31003) + Blossom audio storage |

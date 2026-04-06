@@ -86,9 +86,9 @@ export function DeckStack({ onAccountabilityRecord }: DeckStackProps) {
                       transform: [{ scale }, { translateY: -offsetY }],
                       zIndex: 10 - depth,
                       opacity: 1 - depth * 0.08,
+                      pointerEvents: 'none',
                     },
                   ]}
-                  pointerEvents="none"
                 >
                   {renderCardContent(card, intensity)}
                 </View>
