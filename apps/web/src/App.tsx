@@ -1,4 +1,5 @@
 import type { Component } from 'solid-js';
+import { allCards } from '@doodat/cards';
 
 const App: Component = () => {
   return (
@@ -14,6 +15,9 @@ const App: Component = () => {
         <div class="neu-inset mt-8 p-4">
           <p class="text-sm leading-relaxed text-dodaat-textSecondary">
             Rebuilding. The web-first MVP is in progress.
+          </p>
+          <p class="mt-3 text-xs tracking-wide text-dodaat-textMuted">
+            {allCards.length} cards loaded
           </p>
         </div>
       </article>

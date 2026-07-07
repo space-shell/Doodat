@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@doodat/cards": "workspace:*",
     "solid-js": "^1.8.22"
   },
   "devDependencies": {

@@ -1,0 +1,21 @@
+{
+  "name": "@doodat/cards",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared card content, domain types, and dealing engine for dodaat",
+  "exports": {
+    ".": "./src/index.ts",
+    "./data": "./src/data/index.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  }
+}
