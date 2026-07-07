@@ -16,19 +16,14 @@
           name = "dodaat";
 
           packages = with pkgs; [
-            # JS / Expo
             nodejs_22
-            # Android debugging (adb for remote Chrome DevTools)
-            android-tools
-            # Java (required for expo prebuild + gradle)
-            jdk17
-            # Utilities
+            pnpm
             git
             gh
           ];
 
           shellHook = ''
-            echo "dodaat devshell — node $(node --version), adb $(adb version | head -1)"
+            echo "dodaat devshell — node $(node --version), pnpm $(pnpm --version)"
           '';
         };
       }
