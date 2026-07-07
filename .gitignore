@@ -3,9 +3,15 @@
 # dependencies
 node_modules/
 
+# Vite
+dist/
+.vite/
+
+# test coverage
+coverage/
+
 # Expo
 .expo/
-dist/
 web-build/
 expo-env.d.ts
 
