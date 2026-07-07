@@ -30,4 +30,24 @@
       inset 3px 3px 6px theme('colors.dodaat.shadowDark'),
       inset -3px -3px 6px theme('colors.dodaat.shadowLight');
   }
+
+  .neu-button {
+    background-color: theme('colors.dodaat.background');
+    border-radius: theme('borderRadius.button');
+    box-shadow:
+      4px 4px 8px theme('colors.dodaat.shadowDark'),
+      -4px -4px 8px theme('colors.dodaat.shadowLight');
+    transition: box-shadow 0.12s ease, transform 0.12s ease;
+  }
+  .neu-button:hover {
+    box-shadow:
+      5px 5px 10px theme('colors.dodaat.shadowDark'),
+      -5px -5px 10px theme('colors.dodaat.shadowLight');
+  }
+  .neu-button:active {
+    box-shadow:
+      inset 2px 2px 4px theme('colors.dodaat.shadowDark'),
+      inset -2px -2px 4px theme('colors.dodaat.shadowLight');
+    transform: translateY(1px);
+  }
 }
