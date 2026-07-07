@@ -23,7 +23,7 @@
 - Complete / skip an action (button-driven, no gesture complexity)
 - Persistence across reload + daily reset
 - Onboarding wizard (domain preferences + weekly intensity)
-- Accountability card prompt (after 3 consecutive skips)
+- Accountability card prompt (after 3 skips in a session; once per day)
 - Weekly intensity re-selection (on ISO-week boundary)
 - Streak tracking (consecutive completion days, via RxJS `scan`)
 - Daily completion summary
@@ -66,7 +66,7 @@ Framework-agnostic TypeScript. No Solid, no RxJS, no DOM.
 4. Port `data/cards/{physical,mental,spiritual}.ts` → `src/data/` verbatim (90 cards)
 5. **Test-first:** `selectCards()` respects weights and excludes recent IDs within the 63-card / 7-day window
 6. Port `utils/deck.ts` → `src/deck.ts` (`mulberry32`, `dateSeed`, `cardWeight`, `selectCards`, `dealDailyCards`, `getCardTask`)
-7. **Test-first:** accountability trigger fires after exactly 3 consecutive skips
+7. **Test-first:** accountability trigger fires after exactly 3 total skips (per US-005)
 8. Port accountability logic
 9. Export barrel `src/index.ts`
 
