@@ -21,6 +21,8 @@ export default {
           textSecondary: '#7A7068',
           textMuted: '#B0A89E',
           systemCard: '#EDE8DE',
+          complete: '#6B9B6B',   // muted sage green — completed card status
+          skip: '#B06B6B',       // muted red — skipped card status
         },
       },
       borderRadius: {

@@ -1,8 +1,10 @@
 import type { Component } from 'solid-js';
 import { createMemo, Switch, Match, Show } from 'solid-js';
 import { state } from './store';
+import { emit } from './streams/intents';
 import { isContentCard } from './types';
 import ContentCardView from './components/ContentCardView';
+import CardNav from './components/CardNav';
 import Onboarding from './components/Onboarding';
 import IntensitySelect from './components/IntensitySelect';
 import AccountabilityCard from './components/AccountabilityCard';
@@ -31,7 +33,32 @@ const App: Component = () => {
     <main class="min-h-screen flex items-center justify-center p-6">
       <Show when={current()} fallback={<p class="text-dodaat-textMuted">Loading…</p>}>
         <Switch>
-          <Match when={contentCard()}>{(card) => <ContentCardView card={card()} />}</Match>
+          <Match when={contentCard()}>
+            {(card) => (
+              <div class="w-full max-w-md flex flex-col gap-4">
+                <CardNav />
+                <ContentCardView card={card()} />
+                <div class="flex gap-3">
+                  <button
+                    data-testid="back-btn"
+                    class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary disabled:opacity-40"
+                    disabled={state.currentIndex === 0}
+                    onClick={() => emit({ type: 'NAVIGATE', index: state.currentIndex - 1 })}
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    data-testid="forward-btn"
+                    class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary disabled:opacity-40"
+                    disabled={state.currentIndex >= state.deck.length - 1}
+                    onClick={() => emit({ type: 'NAVIGATE', index: state.currentIndex + 1 })}
+                  >
+                    Forward →
+                  </button>
+                </div>
+              </div>
+            )}
+          </Match>
           <Match when={onboardingCard()}>{(card) => <Onboarding card={card()} />}</Match>
           <Match when={isIntensity()}>
             <IntensitySelect mode="weekly" />

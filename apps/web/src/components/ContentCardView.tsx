@@ -42,14 +42,14 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
           class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary"
           onClick={() => emit({ type: 'SWIPE', card: props.card, direction: 'skip' })}
         >
-          ← Skip
+          Skip
         </button>
         <button
           data-testid="complete-btn"
           class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-goldDark"
           onClick={() => emit({ type: 'SWIPE', card: props.card, direction: 'complete' })}
         >
-          Done →
+          Done
         </button>
       </div>
     </article>
