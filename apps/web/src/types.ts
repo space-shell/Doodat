@@ -27,6 +27,10 @@ export interface DailyState {
 export interface StreakState {
   count: number;
   lastCompletedDate: string | null; // YYYY-MM-DD of last day with ≥1 completion
+  /** Snapshot of count at the start of today — enables revert on update-in-place. */
+  dayStartCount: number;
+  /** Snapshot of lastCompletedDate at the start of today. */
+  dayStartLastCompletedDate: string | null;
 }
 
 // ─── Deck composition ─────────────────────────────────────────────────────────
@@ -66,6 +70,7 @@ export type Intent =
   | { type: 'SET_INTENSITY'; intensity: IntensityLevel }
   | { type: 'SWIPE'; card: ContentCard; direction: SwipeDirection }
   | { type: 'ADVANCE' } // move to next card (system cards)
+  | { type: 'NAVIGATE'; index: number } // jump to a specific deck position (free navigation)
   | { type: 'DISMISS_ACCOUNTABILITY' }
   | { type: 'DAILY_RESET'; date: string };
 

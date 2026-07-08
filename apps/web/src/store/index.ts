@@ -1,7 +1,7 @@
 import { createStore, reconcile } from 'solid-js/store';
 import { createEffect } from 'solid-js';
 import { state$ } from '../streams/stateMachine';
-import { initialState, buildDailyDeck } from '../streams/reducer';
+import { initialState, buildDailyDeck, nextUnresolvedIndex } from '../streams/reducer';
 import { todayString } from '@doodat/cards';
 import type { AppState, UserProfile, DailyState, StreakState } from '../types';
 
@@ -50,7 +50,13 @@ function loadSeed(): AppState {
   const today = todayString();
   const persistedDaily = read<DailyState>(KEYS.DAILY);
   const recentCardIds = read<string[]>(KEYS.RECENT) ?? [];
-  const streak = read<StreakState>(KEYS.STREAK) ?? { count: 0, lastCompletedDate: null };
+  const rawStreak = read<Partial<StreakState>>(KEYS.STREAK);
+  const streak: StreakState = {
+    count: rawStreak?.count ?? 0,
+    lastCompletedDate: rawStreak?.lastCompletedDate ?? null,
+    dayStartCount: rawStreak?.dayStartCount ?? rawStreak?.count ?? 0,
+    dayStartLastCompletedDate: rawStreak?.dayStartLastCompletedDate ?? rawStreak?.lastCompletedDate ?? null,
+  };
 
   const profile = persistedProfile;
 
@@ -66,14 +72,15 @@ function loadSeed(): AppState {
     };
   }
 
-  // Same day → resume from the number of outcomes already recorded.
+  // Same day → resume at the first unresolved content card (free navigation).
+  const deck = buildDailyDeck(profile, today, recentCardIds);
   return {
     profile,
     daily: persistedDaily,
     recentCardIds,
     streak,
-    deck: buildDailyDeck(profile, today, recentCardIds),
-    currentIndex: persistedDaily.outcomes.length,
+    deck,
+    currentIndex: nextUnresolvedIndex(deck, persistedDaily.outcomes, 0),
   };
 }
 

@@ -1,10 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { reduce, initialState, dayBefore } from './reducer';
-import type { AppState, UserProfile } from '../types';
+import type { AppState, UserProfile, StreakState } from '../types';
 import type { UserPreferences } from '@doodat/cards';
 import { dealDailyCards } from '@doodat/cards';
 
 const DATE = '2026-01-15'; // a Thursday
+
+const ZERO_STREAK: StreakState = {
+  count: 0,
+  lastCompletedDate: null,
+  dayStartCount: 0,
+  dayStartLastCompletedDate: null,
+};
 
 function makeProfile(over: Partial<UserProfile> = {}): UserProfile {
   return {
@@ -26,11 +33,18 @@ function makeState(over: Partial<AppState> = {}): AppState {
     profile,
     daily: { date: DATE, outcomes: [], accountabilityShown: false },
     recentCardIds: [],
-    streak: { count: 0, lastCompletedDate: null },
+    streak: { ...ZERO_STREAK },
     deck,
     currentIndex: 0,
     ...over,
   };
+}
+
+/** Helper: get the content card at a deck index, narrowed. */
+function contentAt(s: AppState, i: number) {
+  const c = s.deck[i];
+  if (!c || c.type !== 'content') throw new Error(`expected content card at ${i}`);
+  return c;
 }
 
 describe('initialState', () => {
@@ -67,7 +81,6 @@ describe('SET_INTENSITY', () => {
     expect(next.profile.onboardingComplete).toBe(true);
     expect(next.profile.currentIntensity).toBe('high');
     expect(next.profile.intensitySetAt).toBeGreaterThan(0);
-    // deck is now content cards + completion, not wizard cards
     expect(next.deck.some((c) => c.type === 'content')).toBe(true);
     expect(next.deck[next.deck.length - 1].type).toBe('completion');
     expect(next.currentIndex).toBe(0);
@@ -81,52 +94,124 @@ describe('SET_INTENSITY', () => {
   });
 });
 
+describe('NAVIGATE', () => {
+  it('jumps to the specified deck index', () => {
+    const next = reduce(makeState({ currentIndex: 0 }), { type: 'NAVIGATE', index: 5 });
+    expect(next.currentIndex).toBe(5);
+  });
+
+  it('clamps to the last valid index', () => {
+    const s = makeState();
+    const lastIndex = s.deck.length - 1;
+    const next = reduce(s, { type: 'NAVIGATE', index: 999 });
+    expect(next.currentIndex).toBe(lastIndex);
+  });
+
+  it('clamps to 0 for negative indices', () => {
+    const next = reduce(makeState({ currentIndex: 3 }), { type: 'NAVIGATE', index: -5 });
+    expect(next.currentIndex).toBe(0);
+  });
+});
+
 describe('SWIPE', () => {
-  it('records a complete outcome and advances the index', () => {
+  it('records a complete outcome and navigates to next incomplete', () => {
     const s = makeState({ currentIndex: 0 });
-    const card = s.deck[0];
-    if (card.type !== 'content') throw new Error('expected content card');
+    const card = contentAt(s, 0);
     const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
     expect(next.daily.outcomes).toHaveLength(1);
     expect(next.daily.outcomes[0].swipeDirection).toBe('complete');
     expect(next.daily.outcomes[0].cardId).toBe(card.id);
+    // card 0 is resolved, next incomplete is card 1
     expect(next.currentIndex).toBe(1);
   });
 
   it('records a skip outcome', () => {
     const s = makeState();
-    const card = s.deck[0];
-    if (card.type !== 'content') throw new Error('expected content card');
+    const card = contentAt(s, 0);
     const next = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
     expect(next.daily.outcomes[0].swipeDirection).toBe('skip');
   });
 
   it('appends the swiped card id to recentCardIds (capped at 63)', () => {
     const s = makeState({ recentCardIds: Array.from({ length: 63 }, (_, i) => `phys-${i}`) });
-    const card = s.deck[0];
-    if (card.type !== 'content') throw new Error('expected content card');
+    const card = contentAt(s, 0);
     const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
     expect(next.recentCardIds).toHaveLength(63);
     expect(next.recentCardIds[62]).toBe(card.id);
   });
 
+  it('updates the outcome in place when re-swiping the same card', () => {
+    const s = makeState({ currentIndex: 0 });
+    const card = contentAt(s, 0);
+    const skipped = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
+    expect(skipped.daily.outcomes).toHaveLength(1);
+    expect(skipped.daily.outcomes[0].swipeDirection).toBe('skip');
+    // Navigate back to card 0 and complete it
+    const navBack = reduce(skipped, { type: 'NAVIGATE', index: 0 });
+    const completed = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0), direction: 'complete' });
+    // Still only 1 outcome — replaced, not appended
+    expect(completed.daily.outcomes).toHaveLength(1);
+    expect(completed.daily.outcomes[0].swipeDirection).toBe('complete');
+  });
+
+  it('does not duplicate the card id in recentCardIds on re-swipe', () => {
+    const s = makeState({ currentIndex: 0 });
+    const card = contentAt(s, 0);
+    const first = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
+    const navBack = reduce(first, { type: 'NAVIGATE', index: 0 });
+    const second = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0), direction: 'complete' });
+    expect(second.recentCardIds.filter((id) => id === card.id)).toHaveLength(1);
+  });
+
+  it('navigates to the next incomplete card, skipping already-resolved ones', () => {
+    // Pre-resolve cards 0 and 1, then complete card 2 → should jump to card 3
+    const s = makeState({
+      currentIndex: 2,
+      daily: {
+        date: DATE,
+        outcomes: [
+          { cardId: 'pre-0', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', timestamp: 1 },
+          { cardId: 'pre-1', domain: 'mental', swipeDirection: 'complete', intensity: 'medium', timestamp: 2 },
+        ],
+        accountabilityShown: false,
+      },
+    });
+    // Override the outcome cardIds to match the actual deck card ids
+    const card0 = contentAt(s, 0);
+    const card1 = contentAt(s, 1);
+    s.daily.outcomes[0].cardId = card0.id;
+    s.daily.outcomes[1].cardId = card1.id;
+    const card2 = contentAt(s, 2);
+    const next = reduce(s, { type: 'SWIPE', card: card2, direction: 'complete' });
+    // Cards 0, 1, 2 are now resolved → next incomplete is card 3
+    expect(next.currentIndex).toBe(3);
+  });
+
+  it('auto-navigates to completion when all content cards are resolved', () => {
+    const s = makeState();
+    // Resolve all 9 content cards
+    let state = s;
+    for (let i = 0; i < 9; i++) {
+      const card = contentAt(state, i);
+      state = reduce(state, { type: 'SWIPE', card, direction: 'complete' });
+    }
+    // All 9 resolved → should be on the completion card
+    expect(state.deck[state.currentIndex].type).toBe('completion');
+  });
+
   it('injects an accountability card after the 3rd skip', () => {
     let s = makeState();
-    // swipe 3 content cards, all skip
     for (let i = 0; i < 3; i++) {
-      const card = s.deck[s.currentIndex];
-      if (card.type !== 'content') throw new Error('expected content card');
+      const card = contentAt(s, s.currentIndex);
       s = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
     }
-    // After 3rd skip, next card should be the accountability card
     expect(s.deck[s.currentIndex].type).toBe('accountability');
   });
 
   it('does not inject accountability once already shown', () => {
     let s = makeState({ daily: { date: DATE, outcomes: [], accountabilityShown: true } });
     for (let i = 0; i < 3; i++) {
-      const card = s.deck[s.currentIndex];
-      if (card.type !== 'content') throw new Error('expected content card');
+      const card = contentAt(s, s.currentIndex);
       s = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
     }
     expect(s.deck.some((c) => c.type === 'accountability')).toBe(false);
@@ -155,15 +240,18 @@ describe('ADVANCE', () => {
 });
 
 describe('DISMISS_ACCOUNTABILITY', () => {
-  it('marks accountability shown and advances past it', () => {
-    // build a deck with an accountability card at index 3
-    const base = makeState();
-    const acc = { id: 'sys-acc', type: 'accountability' as const };
-    const deck = [...base.deck.slice(0, 3), acc, ...base.deck.slice(3)];
-    const s = makeState({ deck, currentIndex: 3 });
+  it('marks accountability shown and navigates to the first unresolved card', () => {
+    // 3 skips on cards 0-2, accountability spliced at index 3
+    let s = makeState();
+    for (let i = 0; i < 3; i++) {
+      const card = contentAt(s, s.currentIndex);
+      s = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
+    }
+    expect(s.deck[s.currentIndex].type).toBe('accountability');
     const next = reduce(s, { type: 'DISMISS_ACCOUNTABILITY' });
     expect(next.daily.accountabilityShown).toBe(true);
-    expect(next.currentIndex).toBe(4);
+    // Cards 0-2 are resolved (skipped) → first unresolved is card 3 (now at index 4 due to splice)
+    expect(next.deck[next.currentIndex].type).toBe('content');
   });
 });
 
@@ -188,45 +276,104 @@ describe('DAILY_RESET', () => {
   });
 
   it('prepends an intensity_select card on a new ISO week', () => {
-    // intensitySetAt is on DATE (2026-01-15, ISO week 3). Reset to a date in a different week.
     const s = makeState();
     const next = reduce(s, { type: 'DAILY_RESET', date: '2026-01-22' }); // next week
     expect(next.deck[0].type).toBe('intensity_select');
+  });
+
+  it('snapshots streak base when yesterday had completions', () => {
+    const s = makeState({
+      streak: { count: 3, lastCompletedDate: DATE, dayStartCount: 2, dayStartLastCompletedDate: dayBefore(DATE) },
+    });
+    const next = reduce(s, { type: 'DAILY_RESET', date: '2026-01-16' });
+    // Yesterday (DATE) had completions → dayStartCount = count (3), dayStartLastDate = DATE
+    expect(next.streak.dayStartCount).toBe(3);
+    expect(next.streak.dayStartLastCompletedDate).toBe(DATE);
+    // count starts at dayStartCount (no outcomes yet today)
+    expect(next.streak.count).toBe(3);
+  });
+
+  it('resets streak base to 0 when yesterday had no completions', () => {
+    const s = makeState({
+      streak: { count: 3, lastCompletedDate: '2026-01-10', dayStartCount: 0, dayStartLastCompletedDate: '2026-01-10' },
+    });
+    const next = reduce(s, { type: 'DAILY_RESET', date: '2026-01-16' });
+    expect(next.streak.dayStartCount).toBe(0);
+    expect(next.streak.count).toBe(0);
   });
 });
 
 describe('streak tracking', () => {
   it('starts the streak at 1 on first completion', () => {
-    const s = makeState({ streak: { count: 0, lastCompletedDate: null } });
-    const card = s.deck[0];
-    if (card.type !== 'content') throw new Error('expected content card');
+    const s = makeState({ streak: { ...ZERO_STREAK } });
+    const card = contentAt(s, 0);
     const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
-    expect(next.streak).toEqual({ count: 1, lastCompletedDate: DATE });
+    expect(next.streak.count).toBe(1);
+    expect(next.streak.lastCompletedDate).toBe(DATE);
   });
 
   it('does not double-count same-day completions', () => {
-    const s = makeState({ streak: { count: 1, lastCompletedDate: DATE } });
-    const card = s.deck[1];
-    if (card.type !== 'content') throw new Error('expected content card');
+    const s = makeState({ streak: { count: 1, lastCompletedDate: DATE, dayStartCount: 0, dayStartLastCompletedDate: null } });
+    const card = contentAt(s, 1);
     const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
     expect(next.streak.count).toBe(1);
   });
 
   it('increments when completing on the day after lastCompletedDate', () => {
     const yesterday = dayBefore(DATE);
-    const s = makeState({ streak: { count: 3, lastCompletedDate: yesterday }, daily: { date: DATE, outcomes: [], accountabilityShown: false } });
-    const card = s.deck[0];
-    if (card.type !== 'content') throw new Error('expected content card');
+    const s = makeState({
+      streak: { count: 3, lastCompletedDate: yesterday, dayStartCount: 3, dayStartLastCompletedDate: yesterday },
+      daily: { date: DATE, outcomes: [], accountabilityShown: false },
+    });
+    const card = contentAt(s, 0);
     const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
-    expect(next.streak).toEqual({ count: 4, lastCompletedDate: DATE });
+    expect(next.streak.count).toBe(4);
+    expect(next.streak.lastCompletedDate).toBe(DATE);
   });
 
   it('resets to 1 when there is a gap > 1 day', () => {
-    const s = makeState({ streak: { count: 5, lastCompletedDate: '2026-01-10' }, daily: { date: DATE, outcomes: [], accountabilityShown: false } });
-    const card = s.deck[0];
-    if (card.type !== 'content') throw new Error('expected content card');
+    const s = makeState({
+      streak: { count: 0, lastCompletedDate: '2026-01-10', dayStartCount: 0, dayStartLastCompletedDate: '2026-01-10' },
+      daily: { date: DATE, outcomes: [], accountabilityShown: false },
+    });
+    const card = contentAt(s, 0);
     const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
-    expect(next.streak).toEqual({ count: 1, lastCompletedDate: DATE });
+    expect(next.streak.count).toBe(1);
+    expect(next.streak.lastCompletedDate).toBe(DATE);
+  });
+
+  it('reverts the streak when flipping a completion to a skip', () => {
+    // Start with a streak of 3 from yesterday
+    const yesterday = dayBefore(DATE);
+    const s = makeState({
+      streak: { count: 3, lastCompletedDate: yesterday, dayStartCount: 3, dayStartLastCompletedDate: yesterday },
+    });
+    // Complete card 0 → streak extends to 4
+    const card = contentAt(s, 0);
+    const completed = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    expect(completed.streak.count).toBe(4);
+    // Navigate back and flip to skip
+    const navBack = reduce(completed, { type: 'NAVIGATE', index: 0 });
+    const flipped = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0), direction: 'skip' });
+    // No completions today → streak reverts to dayStart (3)
+    expect(flipped.streak.count).toBe(3);
+    expect(flipped.streak.lastCompletedDate).toBe(yesterday);
+  });
+
+  it('increments the streak when flipping a skip to a completion', () => {
+    const yesterday = dayBefore(DATE);
+    const s = makeState({
+      streak: { count: 3, lastCompletedDate: yesterday, dayStartCount: 3, dayStartLastCompletedDate: yesterday },
+    });
+    // Skip card 0
+    const card = contentAt(s, 0);
+    const skipped = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
+    expect(skipped.streak.count).toBe(3); // no change
+    // Navigate back and flip to complete
+    const navBack = reduce(skipped, { type: 'NAVIGATE', index: 0 });
+    const flipped = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0), direction: 'complete' });
+    expect(flipped.streak.count).toBe(4);
+    expect(flipped.streak.lastCompletedDate).toBe(DATE);
   });
 });
 
