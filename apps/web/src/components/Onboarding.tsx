@@ -1,8 +1,14 @@
 import type { Component } from 'solid-js';
-import { createSignal, For, Show, Switch, Match } from 'solid-js';
+import { For, Show, Switch, Match } from 'solid-js';
 import type { SystemCard } from '../types';
-import type { PhysicalPreferences } from '@doodat/cards';
-import { emit } from '../streams/intents';
+import {
+  physicalAreas, setPhysicalAreas,
+  fasting, setFasting,
+  mentalAreas, setMentalAreas,
+  writing, setWriting,
+  proximity, setProximity,
+  traditions, setTraditions,
+} from './drafts';
 import IntensitySelect from './IntensitySelect';
 
 const PHYSICAL_AREAS = ['upper_body', 'lower_body', 'full_body', 'flexibility', 'cardio'] as const;
@@ -12,18 +18,9 @@ const TRADITIONS = ['Christianity', 'Stoicism', 'Buddhism', 'Islam', 'Hinduism',
 const titleCase = (s: string) => s.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 const Onboarding: Component<{ card: SystemCard }> = (props) => {
-  // Per-step draft selections (local UI ephemera — committed via SET_PREFERENCES on confirm).
-  const [physicalAreas, setPhysicalAreas] = createSignal<string[]>([]);
-  const [fasting, setFasting] = createSignal(false);
-  const [mentalAreas, setMentalAreas] = createSignal<string[]>([]);
-  const [writing, setWriting] = createSignal(true);
-  const [proximity, setProximity] = createSignal(50);
-  const [traditions, setTraditions] = createSignal<string[]>([]);
-
   const toggle = (get: () => string[], set: (v: string[]) => void, value: string) =>
     set(get().includes(value) ? get().filter((v) => v !== value) : [...get(), value]);
 
-  // The wizard_intensity step renders the intensity selector directly.
   return (
     <Show when={props.card.type !== 'wizard_intensity'} fallback={<IntensitySelect mode="onboarding" />}>
       <article data-testid="onboarding-card" class="neu-raised w-full max-w-md p-6">
@@ -36,13 +33,6 @@ const Onboarding: Component<{ card: SystemCard }> = (props) => {
                 Nine cards a day — three for the body, three for the mind, three
                 for the spirit. Complete or skip each. The deck reshuffles tomorrow.
               </p>
-              <button
-                data-testid="begin"
-                class="neu-button w-full mt-8 py-3 text-sm font-semibold text-dodaat-goldDark"
-                onClick={() => emit({ type: 'ADVANCE' })}
-              >
-                Begin →
-              </button>
             </div>
           </Match>
 
@@ -65,25 +55,6 @@ const Onboarding: Component<{ card: SystemCard }> = (props) => {
               <span>Interested in fasting?</span>
               <input type="checkbox" checked={fasting()} onChange={(e) => setFasting(e.currentTarget.checked)} />
             </label>
-            <button
-              data-testid="confirm"
-              class="neu-button w-full mt-6 py-3 text-sm font-semibold text-dodaat-goldDark"
-              onClick={() => {
-                emit({
-                  type: 'SET_PREFERENCES',
-                  preferences: {
-                    physical: {
-                      focusAreas: physicalAreas() as PhysicalPreferences['focusAreas'],
-                      fastingInterest: fasting(),
-                      dietaryPreferences: [],
-                    },
-                  },
-                });
-                emit({ type: 'ADVANCE' });
-              }}
-            >
-              Confirm →
-            </button>
           </Match>
 
           <Match when={props.card.type === 'wizard_mental'}>
@@ -105,25 +76,6 @@ const Onboarding: Component<{ card: SystemCard }> = (props) => {
               <span>Comfortable with writing?</span>
               <input type="checkbox" checked={writing()} onChange={(e) => setWriting(e.currentTarget.checked)} />
             </label>
-            <button
-              data-testid="confirm"
-              class="neu-button w-full mt-6 py-3 text-sm font-semibold text-dodaat-goldDark"
-              onClick={() => {
-                emit({
-                  type: 'SET_PREFERENCES',
-                  preferences: {
-                    mental: {
-                      challenges: mentalAreas() as never,
-                      readingPreferences: [],
-                      writingComfort: writing(),
-                    },
-                  },
-                });
-                emit({ type: 'ADVANCE' });
-              }}
-            >
-              Confirm →
-            </button>
           </Match>
 
           <Match when={props.card.type === 'wizard_spiritual'}>
@@ -160,22 +112,6 @@ const Onboarding: Component<{ card: SystemCard }> = (props) => {
                 )}
               </For>
             </div>
-
-            <button
-              data-testid="confirm"
-              class="neu-button w-full mt-6 py-3 text-sm font-semibold text-dodaat-goldDark"
-              onClick={() => {
-                emit({
-                  type: 'SET_PREFERENCES',
-                  preferences: {
-                    spiritual: { traditionProximity: proximity(), traditions: traditions() },
-                  },
-                });
-                emit({ type: 'ADVANCE' });
-              }}
-            >
-              Confirm →
-            </button>
           </Match>
         </Switch>
       </article>

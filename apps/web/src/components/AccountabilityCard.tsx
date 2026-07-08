@@ -1,5 +1,4 @@
 import type { Component } from 'solid-js';
-import { emit } from '../streams/intents';
 
 const AccountabilityCard: Component = () => (
   <article data-testid="accountability-card" class="neu-raised w-full max-w-md p-6">
@@ -16,14 +15,6 @@ const AccountabilityCard: Component = () => (
         with the social layer.)
       </p>
     </div>
-
-    <button
-      data-testid="dismiss-accountability"
-      class="neu-button w-full mt-6 py-3 text-sm font-semibold text-dodaat-goldDark"
-      onClick={() => emit({ type: 'DISMISS_ACCOUNTABILITY' })}
-    >
-      Continue →
-    </button>
   </article>
 );
 

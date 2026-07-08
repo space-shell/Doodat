@@ -1,7 +1,6 @@
 import type { Component } from 'solid-js';
 import { For, Show } from 'solid-js';
 import { state } from '../store';
-import { emit } from '../streams/intents';
 
 const DOMAIN_LABEL = { physical: 'Physical', mental: 'Mental', spiritual: 'Spiritual' } as const;
 
@@ -48,14 +47,6 @@ const CompletionSummary: Component = () => {
           </div>
         </Show>
       </div>
-
-      <button
-        data-testid="back-to-cards-btn"
-        class="neu-button mt-6 w-full py-3 text-sm font-semibold text-dodaat-textSecondary"
-        onClick={() => emit({ type: 'NAVIGATE', index: 0 })}
-      >
-        ← Back to cards
-      </button>
     </article>
   );
 };

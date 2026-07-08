@@ -1,10 +1,10 @@
 import type { Component } from 'solid-js';
 import { createMemo, Switch, Match, Show } from 'solid-js';
 import { state } from './store';
-import { emit } from './streams/intents';
 import { isContentCard } from './types';
 import ContentCardView from './components/ContentCardView';
 import CardNav from './components/CardNav';
+import BottomBar from './components/BottomBar';
 import Onboarding from './components/Onboarding';
 import IntensitySelect from './components/IntensitySelect';
 import AccountabilityCard from './components/AccountabilityCard';
@@ -15,8 +15,6 @@ const isWizardType = (type: string) => type === 'welcome' || type.startsWith('wi
 const App: Component = () => {
   const current = () => state.deck[state.currentIndex];
 
-  // Per-type narrowings. Match.when takes the value; when truthy the children
-  // accessor yields the narrowed, non-null card (Solid's idiomatic narrowing).
   const contentCard = createMemo(() => {
     const c = current();
     return c && isContentCard(c) ? c : undefined;
@@ -30,46 +28,38 @@ const App: Component = () => {
   const isCompletion = createMemo(() => current()?.type === 'completion');
 
   return (
-    <main class="h-screen w-screen flex items-center justify-center">
+    <main class="min-h-screen flex flex-col items-center p-6">
       <Show when={current()} fallback={<p class="text-dodaat-textMuted">Loading…</p>}>
-        <Switch>
-          <Match when={contentCard()}>
-            {(card) => (
-              <div class="w-full max-w-md h-full flex flex-col justify-between gap-4 py-6">
-                <CardNav />
-                <ContentCardView card={card()} />
-                <div class="flex gap-3">
-                  <button
-                    data-testid="back-btn"
-                    class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary disabled:opacity-40"
-                    disabled={state.currentIndex === 0}
-                    onClick={() => emit({ type: 'NAVIGATE', index: state.currentIndex - 1 })}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    data-testid="forward-btn"
-                    class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary disabled:opacity-40"
-                    disabled={state.currentIndex >= state.deck.length - 1}
-                    onClick={() => emit({ type: 'NAVIGATE', index: state.currentIndex + 1 })}
-                  >
-                    Forward →
-                  </button>
-                </div>
-              </div>
-            )}
-          </Match>
-          <Match when={onboardingCard()}>{(card) => <Onboarding card={card()} />}</Match>
-          <Match when={isIntensity()}>
-            <IntensitySelect mode="weekly" />
-          </Match>
-          <Match when={isAccountability()}>
-            <AccountabilityCard />
-          </Match>
-          <Match when={isCompletion()}>
-            <CompletionSummary />
-          </Match>
-        </Switch>
+        <div class="w-full max-w-md flex-1 flex flex-col">
+          {/* Top — card navigation grid (content cards only) */}
+          <Show when={contentCard()}>
+            <div class="pt-2 pb-4">
+              <CardNav />
+            </div>
+          </Show>
+
+          {/* Middle — card content, vertically centered */}
+          <div class="flex-1 flex items-center justify-center py-4">
+            <Switch>
+              <Match when={contentCard()}>{(card) => <ContentCardView card={card()} />}</Match>
+              <Match when={onboardingCard()}>{(card) => <Onboarding card={card()} />}</Match>
+              <Match when={isIntensity()}>
+                <IntensitySelect mode="weekly" />
+              </Match>
+              <Match when={isAccountability()}>
+                <AccountabilityCard />
+              </Match>
+              <Match when={isCompletion()}>
+                <CompletionSummary />
+              </Match>
+            </Switch>
+          </div>
+
+          {/* Bottom — action / navigation bar */}
+          <div class="pb-2 pt-4">
+            <BottomBar />
+          </div>
+        </div>
       </Show>
     </main>
   );
