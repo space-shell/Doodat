@@ -30,12 +30,12 @@ const App: Component = () => {
   const isCompletion = createMemo(() => current()?.type === 'completion');
 
   return (
-    <main class="min-h-screen flex items-center justify-center p-6">
+    <main class="h-screen w-screen flex items-center justify-center">
       <Show when={current()} fallback={<p class="text-dodaat-textMuted">Loading…</p>}>
         <Switch>
           <Match when={contentCard()}>
             {(card) => (
-              <div class="w-full max-w-md flex flex-col gap-4">
+              <div class="w-full max-w-md h-full flex flex-col justify-between gap-4 py-6">
                 <CardNav />
                 <ContentCardView card={card()} />
                 <div class="flex gap-3">
