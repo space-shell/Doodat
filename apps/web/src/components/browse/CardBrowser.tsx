@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import { createSignal, createMemo, Show, For } from 'solid-js';
+import { createSignal, createMemo, Show, For, onMount, onCleanup } from 'solid-js';
 import { radarSeries, type Domain, type StatGrouping } from '@doodat/cards';
 import RadarChart from './RadarChart';
 import CardStats from './CardStats';
@@ -57,11 +57,18 @@ const CardBrowser: Component = () => {
     URL.revokeObjectURL(url);
   };
 
-  /** Clear every note after a confirm. */
-  const clearNotes = () => {
-    if (noteCount() === 0) return;
-    if (confirm(`Clear all ${noteCount()} note(s)? This cannot be undone.`)) clearAllNotes();
+  // Two-stage clear confirmation: arming turns the button red ("Confirm…"),
+  // a second click deletes. Click-away (via the backdrop) or Escape cancels.
+  const [armed, setArmed] = createSignal(false);
+  const arm = () => noteCount() > 0 && setArmed(true);
+  const disarm = () => setArmed(false);
+  const confirmClear = () => {
+    clearAllNotes();
+    setArmed(false);
   };
+  const onKey = (e: KeyboardEvent) => e.key === 'Escape' && disarm();
+  onMount(() => window.addEventListener('keydown', onKey));
+  onCleanup(() => window.removeEventListener('keydown', onKey));
 
   return (
     <main class="min-h-screen p-6">
@@ -75,7 +82,7 @@ const CardBrowser: Component = () => {
           </a>
           <div class="mt-2 flex items-center justify-between gap-3 flex-wrap">
             <h1 class="text-2xl font-bold text-dodaat-textPrimary">Card browser</h1>
-            <div class="flex gap-2">
+            <div class="flex gap-2 relative">
               <button
                 data-testid="export-notes"
                 class="neu-button rounded-button px-3 py-2 text-xs font-semibold text-dodaat-textSecondary"
@@ -85,11 +92,25 @@ const CardBrowser: Component = () => {
               </button>
               <button
                 data-testid="clear-notes"
-                class="neu-button rounded-button px-3 py-2 text-xs font-semibold text-dodaat-skip"
-                onClick={clearNotes}
+                class="neu-button rounded-button px-3 py-2 text-xs font-semibold"
+                classList={{
+                  'text-dodaat-skip': !armed(),
+                  'bg-dodaat-skip text-white': armed(),
+                }}
+                disabled={noteCount() === 0}
+                title={noteCount() === 0 ? 'No notes to clear' : ''}
+                onClick={() => (armed() ? confirmClear() : arm())}
               >
-                Clear all
+                {armed() ? 'Confirm delete all notes' : 'Clear all'}
               </button>
+              {/* Click-away backdrop — visible only while armed */}
+              <Show when={armed()}>
+                <div
+                  class="fixed inset-0 z-40"
+                  onClick={disarm}
+                  aria-hidden="true"
+                />
+              </Show>
             </div>
           </div>
           <p class="text-sm text-dodaat-textSecondary">
