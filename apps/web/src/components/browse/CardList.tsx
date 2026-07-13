@@ -63,7 +63,7 @@ const CardList: Component<CardListProps> = (props) => {
       />
 
       <Show when={filtered().length > 0} fallback={<p class="text-sm text-dodaat-textMuted">No cards match.</p>}>
-        <ul class="space-y-2">
+        <ul class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
           <For each={filtered()}>
             {(card) => (
               <li>

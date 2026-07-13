@@ -11,7 +11,6 @@ const GROUPINGS: { id: StatGrouping; label: string }[] = [
   { id: 'domain', label: 'Domain' },
   { id: 'tradition', label: 'Traditions' },
   { id: 'category', label: 'Categories' },
-  { id: 'intensity', label: 'Intensity' },
 ];
 
 const DOMAIN_COLOR: Record<Domain, string> = {
