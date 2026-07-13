@@ -42,13 +42,15 @@ Doodat/
 ├── tsconfig.base.json
 ├── packages/
 │   ├── cards/                   # @doodat/cards — SHARED source of truth
-│   │   └── src/{data, types, deck}.ts   # 90 cards + domain types + dealing engine
+│   │   └── src/{data, types, deck, stats}.ts   # 90 cards + domain types + dealing engine + deck stats
 │   └── physical/                # @doodat/physical — printable Markdown generator
 ├── apps/
 │   └── web/                     # @doodat/web — SolidJS + RxJS + Tailwind
-│       └── src/{components, streams, store, config}
+│       ├── index.html           # daily-ritual app entry
+│       ├── cards.html           # card browser entry (review + stats + notes)
+│       └── src/{components, streams, store}   # + cards.tsx (browser root)
 ├── tests/                       # Playwright E2E (root-level, targets apps/web)
-├── docs/                        # DEVELOPMENT_PLAN.md, CARD_DESIGN.md
+├── docs/                        # DEVELOPMENT_PLAN.md, CARD_DESIGN.md, CARD_BROWSER.md
 └── archive/                     # old dodaat/ tree, reference only
 ```
 
@@ -56,7 +58,7 @@ Doodat/
 
 | Layer | Owns | Forbidden from |
 |---|---|---|
-| `packages/cards` | card data, domain types, dealing engine | any framework dependency |
+| `packages/cards` | card data, domain types, dealing engine, deck statistics | any framework dependency |
 | `apps/web/src/streams/` | RxJS observables — the state/event layer | importing Solid |
 | `apps/web/src/store/` | Solid `createStore` bridging streams → signals + localStorage | business logic (delegate to streams) |
 | `apps/web/src/components/` | rendering + intent emission | holding state, importing RxJS directly |
