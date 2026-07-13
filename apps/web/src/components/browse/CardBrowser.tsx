@@ -5,6 +5,7 @@ import RadarChart from './RadarChart';
 import CardStats from './CardStats';
 import CardList from './CardList';
 import CardDetail from './CardDetail';
+import { notes, clearAllNotes } from '../../store/notes';
 import type { ContentCard } from '@doodat/cards';
 
 const GROUPINGS: { id: StatGrouping; label: string }[] = [
@@ -41,6 +42,27 @@ const CardBrowser: Component = () => {
     }
   });
 
+  const noteCount = () => Object.keys(notes).length;
+
+  /** Download all notes as a JSON file: { [cardId]: note }. */
+  const exportNotes = () => {
+    const blob = new Blob([JSON.stringify({ ...notes }, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dodaat-card-notes.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  /** Clear every note after a confirm. */
+  const clearNotes = () => {
+    if (noteCount() === 0) return;
+    if (confirm(`Clear all ${noteCount()} note(s)? This cannot be undone.`)) clearAllNotes();
+  };
+
   return (
     <main class="min-h-screen p-6">
       <div class="max-w-3xl mx-auto space-y-8">
@@ -51,7 +73,25 @@ const CardBrowser: Component = () => {
           >
             ← Back to dodaat
           </a>
-          <h1 class="mt-2 text-2xl font-bold text-dodaat-textPrimary">Card browser</h1>
+          <div class="mt-2 flex items-center justify-between gap-3 flex-wrap">
+            <h1 class="text-2xl font-bold text-dodaat-textPrimary">Card browser</h1>
+            <div class="flex gap-2">
+              <button
+                data-testid="export-notes"
+                class="neu-button rounded-button px-3 py-2 text-xs font-semibold text-dodaat-textSecondary"
+                onClick={exportNotes}
+              >
+                Export notes
+              </button>
+              <button
+                data-testid="clear-notes"
+                class="neu-button rounded-button px-3 py-2 text-xs font-semibold text-dodaat-skip"
+                onClick={clearNotes}
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
           <p class="text-sm text-dodaat-textSecondary">
             Review all cards, deck statistics, and your reviewer notes.
           </p>
@@ -108,7 +148,7 @@ const CardBrowser: Component = () => {
 
         {/* Two-column: list + detail */}
         <div class="grid gap-6 md:grid-cols-2">
-          <CardList selectedId={selected()?.id ?? null} onSelect={setSelected} />
+          <CardList selectedId={selected()?.id ?? null} onSelect={setSelected} notes={notes} />
           <Show
             when={selected()}
             fallback={

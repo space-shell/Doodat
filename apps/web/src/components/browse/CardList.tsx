@@ -12,16 +12,20 @@ const DOMAIN_DOT = {
 interface CardListProps {
   selectedId: string | null;
   onSelect: (card: ContentCard) => void;
+  /** Reactive notes record — keys are card ids with a note. */
+  notes: Record<string, string>;
 }
 
 const CardList: Component<CardListProps> = (props) => {
   const [domain, setDomain] = createSignal<Domain | 'all'>('all');
   const [query, setQuery] = createSignal('');
+  const [onlyNotes, setOnlyNotes] = createSignal(false);
 
   const filtered = createMemo(() => {
     const q = query().trim().toLowerCase();
     return allCards.filter((c) => {
       if (domain() !== 'all' && c.domain !== domain()) return false;
+      if (onlyNotes() && !(c.id in props.notes)) return false;
       if (!q) return true;
       return (
         c.id.toLowerCase().includes(q) ||
@@ -31,6 +35,8 @@ const CardList: Component<CardListProps> = (props) => {
       );
     });
   });
+
+  const noteCount = () => Object.keys(props.notes).length;
 
   return (
     <section data-testid="card-list" class="space-y-3">
@@ -50,6 +56,9 @@ const CardList: Component<CardListProps> = (props) => {
             </FilterPill>
           )}
         </For>
+        <FilterPill active={onlyNotes()} onClick={() => setOnlyNotes((v) => !v)} dot="bg-dodaat-gold">
+          Has notes ({noteCount()})
+        </FilterPill>
       </div>
 
       {/* Search */}
@@ -63,19 +72,22 @@ const CardList: Component<CardListProps> = (props) => {
       />
 
       <Show when={filtered().length > 0} fallback={<p class="text-sm text-dodaat-textMuted">No cards match.</p>}>
-        <ul class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+        <ul class="space-y-4 max-h-[60vh] overflow-y-auto p-2">
           <For each={filtered()}>
             {(card) => (
               <li>
                 <button
                   data-testid={`card-row-${card.id}`}
                   class="neu-button w-full text-left rounded-button px-4 py-3"
-                  classList={{ 'ring-2 ring-dodaat-gold': props.selectedId === card.id }}
+                  classList={{ '!neu-inset !rounded-button': props.selectedId === card.id }}
                   onClick={() => props.onSelect(card)}
                 >
                   <div class="flex items-center gap-2">
                     <span class={`inline-block w-2.5 h-2.5 rounded-full ${DOMAIN_DOT[card.domain]}`} />
                     <span class="text-xs font-mono text-dodaat-textMuted">{card.id}</span>
+                    <Show when={card.id in props.notes}>
+                      <span class="inline-block w-2 h-2 rounded-full bg-dodaat-gold" title="Has note" />
+                    </Show>
                     <span class="ml-auto text-xs font-semibold uppercase tracking-wide text-dodaat-textSecondary">
                       {card.category}
                     </span>

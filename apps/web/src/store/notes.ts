@@ -2,7 +2,7 @@
 // Kept separate from the ritual state machine (streams/reducer): notes are
 // tangential CRUD with no time-based/event-flow semantics, so routing them
 // through intent → reducer → state$ would pollute that pipeline.
-import { createStore } from 'solid-js/store';
+import { createStore, reconcile } from 'solid-js/store';
 import { createEffect } from 'solid-js';
 
 const KEY = 'dodaat_card_notes';
@@ -33,6 +33,15 @@ const [notes, setNotes] = createStore<Record<string, string>>(seed);
 // Persist on any change.
 createEffect(() => write({ ...notes }));
 
+/**
+ * Replace the store wholesale. reconcile() gives replacement semantics so
+ * keys absent from the new object are removed reactively — a plain
+ * setNotes(obj) would *merge*, leaving "deleted" keys visible to the UI.
+ */
+function replace(next: Record<string, string>): void {
+  setNotes(reconcile(next));
+}
+
 /** The current note for a card, or '' if none. */
 export function getNote(id: string): string {
   return notes[id] ?? '';
@@ -40,12 +49,22 @@ export function getNote(id: string): string {
 
 /** Set (or clear, when blank) the note for a card. */
 export function setNote(id: string, text: string): void {
-  setNotes(withNote({ ...notes }, id, text));
+  replace(withNote({ ...notes }, id, text));
 }
 
 /** Remove the note for a card. */
 export function clearNote(id: string): void {
-  setNotes(withNote({ ...notes }, id, ''));
+  replace(withNote({ ...notes }, id, ''));
+}
+
+/** Remove every note. */
+export function clearAllNotes(): void {
+  replace({});
+}
+
+/** Number of cards with a note. */
+export function noteCount(): number {
+  return Object.keys(notes).length;
 }
 
 export { notes };
