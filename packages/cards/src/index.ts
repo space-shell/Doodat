@@ -26,3 +26,12 @@ export { dealDailyCards, getCardTask, cardWeight, todayString, weekString } from
 export type { DailyDealOptions } from './deck';
 
 export { shouldTriggerAccountability, countSkips } from './accountability';
+
+export {
+  countByDomain,
+  countByCategory,
+  countByTradition,
+  countByIntensity,
+  radarSeries,
+} from './stats';
+export type { StatGrouping, RadarSeries } from './stats';

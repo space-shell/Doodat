@@ -28,7 +28,7 @@ const App: Component = () => {
   const isCompletion = createMemo(() => current()?.type === 'completion');
 
   return (
-    <main class="min-h-screen flex flex-col items-center p-6">
+    <main class="min-h-dvh flex flex-col items-center p-6">
       <Show when={current()} fallback={<p class="text-dodaat-textMuted">Loading…</p>}>
         <div class="w-full max-w-md flex-1 flex flex-col">
           {/* Top — card navigation grid (content cards only) */}
