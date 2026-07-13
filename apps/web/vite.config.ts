@@ -12,5 +12,11 @@ export default defineConfig(({ command }) => ({
   build: {
     target: 'esnext',
     outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        cards: 'cards.html',
+      },
+    },
   },
 }));
