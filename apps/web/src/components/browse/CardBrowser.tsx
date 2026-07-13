@@ -82,7 +82,7 @@ const CardBrowser: Component = () => {
           </a>
           <div class="mt-2 flex items-center justify-between gap-3 flex-wrap">
             <h1 class="text-2xl font-bold text-dodaat-textPrimary">Card browser</h1>
-            <div class="flex gap-2 relative">
+            <div class="flex gap-2 relative z-50">
               <button
                 data-testid="export-notes"
                 class="neu-button rounded-button px-3 py-2 text-xs font-semibold text-dodaat-textSecondary"
