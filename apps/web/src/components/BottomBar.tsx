@@ -2,7 +2,6 @@ import type { Component } from 'solid-js';
 import { Switch, Match } from 'solid-js';
 import { state } from '../store';
 import { emit } from '../streams/intents';
-import { isContentCard } from '../types';
 import { physicalAreas, fasting, mentalAreas, writing, proximity, traditions, intensity } from './drafts';
 import type { PhysicalPreferences } from '@doodat/cards';
 
@@ -10,10 +9,6 @@ const BTN = 'neu-button w-full py-3 text-sm font-semibold text-dodaat-goldDark';
 
 const BottomBar: Component = () => {
   const card = () => state.deck[state.currentIndex];
-  const isContent = () => {
-    const c = card();
-    return !!c && isContentCard(c);
-  };
 
   const commitPhysical = () => {
     emit({ type: 'SET_PREFERENCES', preferences: { physical: { focusAreas: physicalAreas() as PhysicalPreferences['focusAreas'], fastingInterest: fasting(), dietaryPreferences: [] } } });
@@ -30,27 +25,6 @@ const BottomBar: Component = () => {
 
   return (
     <Switch>
-      <Match when={isContent()}>
-        <div class="flex gap-3">
-          <button
-            data-testid="back-btn"
-            class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary disabled:opacity-40"
-            disabled={state.currentIndex === 0}
-            onClick={() => emit({ type: 'NAVIGATE', index: state.currentIndex - 1 })}
-          >
-            ← Back
-          </button>
-          <button
-            data-testid="forward-btn"
-            class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary disabled:opacity-40"
-            disabled={state.currentIndex >= state.deck.length - 1}
-            onClick={() => emit({ type: 'NAVIGATE', index: state.currentIndex + 1 })}
-          >
-            Forward →
-          </button>
-        </div>
-      </Match>
-
       <Match when={card()?.type === 'welcome'}>
         <button data-testid="begin" class={BTN} onClick={() => emit({ type: 'ADVANCE' })}>
           Begin
@@ -83,7 +57,7 @@ const BottomBar: Component = () => {
 
       <Match when={card()?.type === 'intensity_select'}>
         <button data-testid="confirm-intensity" class={BTN} onClick={() => emit({ type: 'SET_INTENSITY', intensity: intensity() })}>
-          Confirm for this week
+          Confirm for today
         </button>
       </Match>
 

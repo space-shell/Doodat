@@ -11,11 +11,11 @@ const OPTIONS: { level: IntensityLevel; label: string; desc: string }[] = [
 
 const COUNT: Record<IntensityLevel, number> = { low: 3, medium: 6, high: 9 };
 
-const IntensitySelect: Component<{ mode: 'onboarding' | 'weekly' }> = (props) => {
+const IntensitySelect: Component<{ mode: 'onboarding' | 'daily' }> = (props) => {
   return (
     <article data-testid="intensity-card" class="neu-raised w-full max-w-md p-6">
       <h2 class="text-xl font-bold text-dodaat-textPrimary">
-        {props.mode === 'onboarding' ? 'Choose your daily load' : 'Weekly load'}
+        {props.mode === 'onboarding' ? 'Choose your daily load' : "Today's load"}
       </h2>
       <p class="mt-1 text-sm text-dodaat-textMuted">
         How many cards to draw each day. Any mix of difficulties may show up.

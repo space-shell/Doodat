@@ -32,7 +32,7 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
   };
 
   return (
-    <article data-testid="content-card" class="neu-raised w-full max-w-md p-6">
+    <article data-testid="content-card" class="neu-raised w-full max-w-md p-6 flex flex-col flex-1">
       <header class="flex items-center gap-2 mb-4">
         <span class={`inline-block w-3 h-3 rounded-full ${DOMAIN_DOT[props.card.domain]}`} />
         <span class="text-xs font-semibold tracking-widest uppercase text-dodaat-textMuted">
@@ -94,7 +94,7 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
         </div>
       </Show>
 
-      <div class="flex gap-3 mt-8">
+      <div class="flex gap-3 mt-auto pt-8">
         <button
           data-testid="skip-btn"
           class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary"

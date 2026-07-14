@@ -3,6 +3,7 @@ import { For } from 'solid-js';
 import { state } from '../store';
 import { emit } from '../streams/intents';
 import { isContentCard } from '../types';
+import { settingsOpen, setSettingsOpen } from './drafts';
 
 const CardNav: Component = () => {
   const contentCards = () => {
@@ -17,11 +18,11 @@ const CardNav: Component = () => {
     state.daily.outcomes.find((o) => o.cardId === cardId)?.swipeDirection;
 
   return (
-    <div class="grid grid-cols-9 gap-1.5" data-testid="card-nav">
+    <div class="flex flex-wrap items-center gap-1.5" data-testid="card-nav">
       <For each={contentCards()}>
         {(item, i) => (
           <button
-            class="aspect-square rounded-lg text-xs font-bold transition-colors duration-300"
+            class="h-9 w-9 rounded-lg text-xs font-bold transition-colors duration-300"
             classList={{
               'neu-button': state.currentIndex !== item.deckIndex,
               'neu-inset': state.currentIndex === item.deckIndex,
@@ -36,6 +37,18 @@ const CardNav: Component = () => {
           </button>
         )}
       </For>
+      <button
+        class="ml-auto h-9 w-9 rounded-lg text-sm font-bold transition-colors duration-300"
+        classList={{
+          'neu-button': !settingsOpen(),
+          'neu-inset': settingsOpen(),
+          'text-dodaat-textSecondary': true,
+        }}
+        onClick={() => setSettingsOpen(!settingsOpen())}
+        data-testid="settings-btn"
+      >
+        &#9881;
+      </button>
     </div>
   );
 };
