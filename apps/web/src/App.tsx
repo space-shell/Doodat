@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js';
-import { createMemo, Switch, Match, Show } from 'solid-js';
+import { createMemo, Show } from 'solid-js';
+import { Transition } from 'solid-transition-group';
 import { state } from './store';
 import { isContentCard } from './types';
 import ContentCardView from './components/ContentCardView';
@@ -11,8 +12,7 @@ import AccountabilityCard from './components/AccountabilityCard';
 import CompletionSummary from './components/CompletionSummary';
 import SettingsView from './components/SettingsView';
 import { settingsOpen } from './components/drafts';
-
-const isWizardType = (type: string) => type === 'welcome' || type.startsWith('wizard_');
+import { neuOnEnter, neuOnExit } from './neuTransition';
 
 const App: Component = () => {
   const current = () => state.deck[state.currentIndex];
@@ -21,13 +21,14 @@ const App: Component = () => {
     const c = current();
     return c && isContentCard(c) ? c : undefined;
   });
-  const onboardingCard = createMemo(() => {
+
+  const viewKey = createMemo(() => {
+    if (settingsOpen()) return 'settings';
     const c = current();
-    return c && !isContentCard(c) && isWizardType(c.type) ? c : undefined;
+    if (!c) return 'loading';
+    if (isContentCard(c)) return `content:${c.id}`;
+    return c.type;
   });
-  const isIntensity = createMemo(() => current()?.type === 'intensity_select');
-  const isAccountability = createMemo(() => current()?.type === 'accountability');
-  const isCompletion = createMemo(() => current()?.type === 'completion');
 
   return (
     <main class="min-h-dvh flex flex-col items-center p-6">
@@ -40,39 +41,28 @@ const App: Component = () => {
             </div>
           </Show>
 
-          {/* Middle — card content or settings */}
-          <div class="flex-1 flex flex-col py-4">
-            <Show when={settingsOpen()} fallback={
-              <Switch>
-                <Match when={contentCard()}>
-                  {(card) => <ContentCardView card={card()} />}
-                </Match>
-                <Match when={onboardingCard()}>
-                  {(card) => (
-                    <div class="flex-1 flex items-center justify-center w-full">
-                      <Onboarding card={card()} />
-                    </div>
-                  )}
-                </Match>
-                <Match when={isIntensity()}>
-                  <div class="flex-1 flex items-center justify-center w-full">
-                    <IntensitySelect mode="daily" />
-                  </div>
-                </Match>
-                <Match when={isAccountability()}>
-                  <div class="flex-1 flex items-center justify-center w-full">
-                    <AccountabilityCard />
-                  </div>
-                </Match>
-                <Match when={isCompletion()}>
-                  <div class="flex-1 flex items-center justify-center w-full">
-                    <CompletionSummary />
-                  </div>
-                </Match>
-              </Switch>
-            }>
-              <SettingsView />
-            </Show>
+          {/* Middle — card content or settings (two-phase neumorphic transition) */}
+          <div class="flex-1 flex flex-col justify-center py-4">
+            <Transition onEnter={neuOnEnter} onExit={neuOnExit} mode="outin" appear>
+              <Show when={viewKey()} keyed>
+                {(key) => {
+                  if (key === 'settings') return <SettingsView />;
+                  if (key === 'loading') return <p class="text-dodaat-textMuted">Loading…</p>;
+
+                  const c = current();
+                  if (!c) return null;
+
+                  if (isContentCard(c)) return <ContentCardView card={c} />;
+
+                  if (c.type === 'welcome' || c.type.startsWith('wizard_'))
+                    return <Onboarding card={c} />;
+                  if (c.type === 'intensity_select') return <IntensitySelect mode="daily" />;
+                  if (c.type === 'accountability') return <AccountabilityCard />;
+                  if (c.type === 'completion') return <CompletionSummary />;
+                  return null;
+                }}
+              </Show>
+            </Transition>
           </div>
 
           {/* Bottom — action bar (hidden for content cards and settings) */}

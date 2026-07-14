@@ -10,7 +10,7 @@ const SettingsView: Component = () => {
   };
 
   return (
-    <div class="flex flex-col gap-6" data-testid="settings-view">
+    <article class="neu-raised w-full max-w-md p-6 flex flex-col gap-6" data-testid="settings-view">
       <h2 class="text-lg font-bold text-dodaat-textPrimary">Settings</h2>
       <button
         class="neu-button py-4 px-6 text-sm font-semibold text-dodaat-textSecondary"
@@ -19,7 +19,7 @@ const SettingsView: Component = () => {
       >
         Reset day to setup wizard
       </button>
-    </div>
+    </article>
   );
 };
 
