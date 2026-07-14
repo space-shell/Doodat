@@ -68,7 +68,7 @@ export interface AppState {
 export type Intent =
   | { type: 'SET_PREFERENCES'; preferences: Partial<UserPreferences> }
   | { type: 'SET_INTENSITY'; intensity: IntensityLevel }
-  | { type: 'SWIPE'; card: ContentCard; direction: SwipeDirection }
+  | { type: 'SWIPE'; card: ContentCard; direction: SwipeDirection; actionResponses?: Record<string, string> }
   | { type: 'ADVANCE' } // move to next card (system cards)
   | { type: 'NAVIGATE'; index: number } // jump to a specific deck position (free navigation)
   | { type: 'DISMISS_ACCOUNTABILITY' }

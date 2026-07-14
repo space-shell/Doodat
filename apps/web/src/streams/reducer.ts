@@ -130,7 +130,7 @@ export function reduce(state: AppState, intent: Intent): AppState {
       return handleSetIntensity(state, intent.intensity);
 
     case 'SWIPE':
-      return handleSwipe(state, intent.card, intent.direction);
+      return handleSwipe(state, intent.card, intent.direction, intent.actionResponses);
 
     case 'ADVANCE':
       return {
@@ -170,17 +170,20 @@ function handleSwipe(
   state: AppState,
   card: ContentCard,
   direction: 'complete' | 'skip',
+  actionResponses?: Record<string, string>,
 ): AppState {
   const current = state.deck[state.currentIndex];
   if (!current || !isContentCard(current)) return state;
 
   const now = Date.now();
+  const hasResponses = actionResponses && Object.keys(actionResponses).length > 0;
   const outcome: CardOutcome = {
     cardId: card.id,
     domain: card.domain,
     swipeDirection: direction,
     intensity: state.profile.currentIntensity,
     difficulty: card.difficulty,
+    ...(hasResponses ? { actionResponses } : {}),
     timestamp: now,
   };
 

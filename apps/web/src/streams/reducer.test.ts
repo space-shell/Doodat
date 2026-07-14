@@ -125,6 +125,25 @@ describe('SWIPE', () => {
     expect(next.currentIndex).toBe(1);
   });
 
+  it('stamps actionResponses on the outcome when provided', () => {
+    const s = makeState({ currentIndex: 0 });
+    const card = contentAt(s, 0);
+    const next = reduce(s, {
+      type: 'SWIPE',
+      card,
+      direction: 'complete',
+      actionResponses: { 'c:journal': 'my reflection' },
+    });
+    expect(next.daily.outcomes[0].actionResponses).toEqual({ 'c:journal': 'my reflection' });
+  });
+
+  it('omits actionResponses when none are provided', () => {
+    const s = makeState({ currentIndex: 0 });
+    const card = contentAt(s, 0);
+    const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    expect(next.daily.outcomes[0].actionResponses).toBeUndefined();
+  });
+
   it('records a skip outcome', () => {
     const s = makeState();
     const card = contentAt(s, 0);
