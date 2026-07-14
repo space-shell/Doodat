@@ -63,11 +63,19 @@ describe('dealDailyCards — recent-card de-duplication', () => {
 });
 
 describe('getCardTask', () => {
-  it('returns the intensity-matched task text', () => {
-    const card = cardById.get('phys-001') as ContentCard;
-    expect(getCardTask(card, 'low')).toBe(card.intensity_low);
-    expect(getCardTask(card, 'medium')).toBe(card.intensity_medium);
-    expect(getCardTask(card, 'high')).toBe(card.intensity_high);
+  it("returns the text matching the card's own difficulty", () => {
+    const picks = [
+      cardById.get('phys-001') as ContentCard,
+      cardById.get('ment-001') as ContentCard,
+      cardById.get('spir-001') as ContentCard,
+    ];
+    for (const card of picks) {
+      const expected =
+        card.difficulty === 'low' ? card.intensity_low
+          : card.difficulty === 'medium' ? card.intensity_medium
+            : card.intensity_high;
+      expect(getCardTask(card), card.id).toBe(expected);
+    }
   });
 });
 

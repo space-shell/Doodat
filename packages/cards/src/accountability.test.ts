@@ -7,6 +7,7 @@ const skip = (cardId = 'phys-001'): CardOutcome => ({
   domain: 'physical',
   swipeDirection: 'skip',
   intensity: 'medium',
+  difficulty: 'medium',
   timestamp: Date.now(),
 });
 
@@ -15,6 +16,7 @@ const complete = (cardId = 'phys-002'): CardOutcome => ({
   domain: 'physical',
   swipeDirection: 'complete',
   intensity: 'medium',
+  difficulty: 'medium',
   timestamp: Date.now(),
 });
 

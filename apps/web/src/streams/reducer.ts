@@ -179,6 +179,7 @@ function handleSwipe(
     domain: card.domain,
     swipeDirection: direction,
     intensity: state.profile.currentIntensity,
+    difficulty: card.difficulty,
     timestamp: now,
   };
 

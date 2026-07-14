@@ -159,9 +159,9 @@ export function dealDailyCards(options: DailyDealOptions): ContentCard[] {
   return [...physical, ...mental, ...spiritual];
 }
 
-/** Get the task text for a card at the user's current intensity. */
-export function getCardTask(card: ContentCard, intensity: IntensityLevel): string {
-  switch (intensity) {
+/** Get the task text for a card — selected by the card's own `difficulty`. */
+export function getCardTask(card: ContentCard): string {
+  switch (card.difficulty) {
     case 'low':
       return card.intensity_low;
     case 'medium':

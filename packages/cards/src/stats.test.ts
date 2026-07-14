@@ -17,9 +17,9 @@ describe('countByDomain', () => {
 
   it('can count an arbitrary card set', () => {
     const cards: ContentCard[] = [
-      { id: 'phys-x', type: 'content', domain: 'physical', category: 'c', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
-      { id: 'phys-y', type: 'content', domain: 'physical', category: 'c', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
-      { id: 'ment-x', type: 'content', domain: 'mental', category: 'c', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
+      { id: 'phys-x', type: 'content', domain: 'physical', category: 'c', difficulty: 'low', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
+      { id: 'phys-y', type: 'content', domain: 'physical', category: 'c', difficulty: 'low', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
+      { id: 'ment-x', type: 'content', domain: 'mental', category: 'c', difficulty: 'high', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
     ];
     expect(countByDomain(cards)).toEqual({ physical: 2, mental: 1, spiritual: 0 });
   });
@@ -85,8 +85,17 @@ describe('countByTradition', () => {
 // ─── countByIntensity ─────────────────────────────────────────────────────────
 
 describe('countByIntensity', () => {
-  it('counts every card once per intensity level (every card has all three)', () => {
-    expect(countByIntensity()).toEqual({ low: 90, medium: 90, high: 90 });
+  it('counts each card once, by its intrinsic difficulty (10/10/10 per domain -> 30/30/30)', () => {
+    expect(countByIntensity()).toEqual({ low: 30, medium: 30, high: 30 });
+  });
+
+  it('counts an arbitrary card set by difficulty', () => {
+    const cards: ContentCard[] = [
+      { id: 'a', type: 'content', domain: 'physical', category: 'c', difficulty: 'low', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
+      { id: 'b', type: 'content', domain: 'physical', category: 'c', difficulty: 'low', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
+      { id: 'c', type: 'content', domain: 'mental', category: 'c', difficulty: 'high', intensity_low: '', intensity_medium: '', intensity_high: '', tags: [], created_at: 0 },
+    ];
+    expect(countByIntensity(cards)).toEqual({ low: 2, medium: 0, high: 1 });
   });
 });
 
@@ -109,10 +118,10 @@ describe('radarSeries', () => {
     expect(total).toBe(30);
   });
 
-  it('produces a 3-axis intensity series', () => {
+  it('produces a 3-axis intensity series (real difficulty spread)', () => {
     const s = radarSeries('intensity');
     expect(s.axes).toEqual(['low', 'medium', 'high']);
-    expect(s.values).toEqual([90, 90, 90]);
+    expect(s.values).toEqual([30, 30, 30]);
   });
 
   it('produces a category series, scoped to one domain', () => {

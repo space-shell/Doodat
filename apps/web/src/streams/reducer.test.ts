@@ -170,8 +170,8 @@ describe('SWIPE', () => {
       daily: {
         date: DATE,
         outcomes: [
-          { cardId: 'pre-0', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', timestamp: 1 },
-          { cardId: 'pre-1', domain: 'mental', swipeDirection: 'complete', intensity: 'medium', timestamp: 2 },
+          { cardId: 'pre-0', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 1 },
+          { cardId: 'pre-1', domain: 'mental', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 2 },
         ],
         accountabilityShown: false,
       },
@@ -264,7 +264,7 @@ describe('DAILY_RESET', () => {
 
   it('resets daily state and rebuilds the deck on a new day', () => {
     const s = makeState({
-      daily: { date: DATE, outcomes: [{ cardId: 'x', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', timestamp: 1 }], accountabilityShown: true },
+      daily: { date: DATE, outcomes: [{ cardId: 'x', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 1 }], accountabilityShown: true },
       currentIndex: 5,
     });
     const next = reduce(s, { type: 'DAILY_RESET', date: '2026-01-16' });

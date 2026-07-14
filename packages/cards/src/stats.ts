@@ -46,16 +46,11 @@ export function countByTradition(cards: ContentCard[] = allCards): Record<string
 }
 
 /**
- * Count cards per intensity level. Every ContentCard carries all three
- * intensity texts, so this is structurally equal to the total per level —
- * shown truthfully. A real spread would need a per-card difficulty field.
+ * Count cards per difficulty level — each card's intrinsic `difficulty`.
  */
 export function countByIntensity(cards: ContentCard[] = allCards): Record<IntensityLevel, number> {
   const out: Record<IntensityLevel, number> = { low: 0, medium: 0, high: 0 };
-  const total = cards.length;
-  out.low = total;
-  out.medium = total;
-  out.high = total;
+  for (const c of cards) out[c.difficulty]++;
   return out;
 }
 

@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import { Show } from 'solid-js';
+import { Show, For } from 'solid-js';
 import type { ContentCard } from '@doodat/cards';
 import CardNotes from './CardNotes';
 
@@ -36,6 +36,9 @@ const CardDetail: Component<{ card: ContentCard }> = (props) => {
             {props.card.tradition}
           </span>
         </Show>
+        <span class="ml-auto text-xs font-semibold uppercase tracking-wide text-dodaat-gold">
+          {props.card.difficulty}
+        </span>
       </div>
 
       {/* All three intensity texts */}
@@ -56,10 +59,26 @@ const CardDetail: Component<{ card: ContentCard }> = (props) => {
         <p class="mt-4 text-sm italic leading-relaxed text-dodaat-textMuted">{props.card.context}</p>
       </Show>
 
-      <Show when={props.card.passage_ref}>
-        <p class="mt-2 text-xs text-dodaat-textMuted">
-          {props.card.tradition} · {props.card.passage_ref}
-        </p>
+      <Show when={props.card.sources?.length}>
+        <ul class="mt-2 space-y-1">
+          <For each={props.card.sources}>
+            {(src) => (
+              <li class="text-xs text-dodaat-textMuted">
+                {src.url ? (
+                  <a href={src.url} target="_blank" rel="noopener noreferrer" class="underline">
+                    {props.card.tradition ? `${props.card.tradition} · ` : ''}
+                    {src.citation}
+                  </a>
+                ) : (
+                  <span>
+                    {props.card.tradition ? `${props.card.tradition} · ` : ''}
+                    {src.citation}
+                  </span>
+                )}
+              </li>
+            )}
+          </For>
+        </ul>
       </Show>
 
       <Show when={props.card.agnostic_interpretation}>

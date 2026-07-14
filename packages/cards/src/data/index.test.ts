@@ -88,11 +88,18 @@ describe('card data integrity', () => {
     ]);
   });
 
-  it('spiritual cards that cite a passage have a passage_ref', () => {
+  it('spiritual cards that cite a passage expose it via sources', () => {
     for (const card of spiritualCards) {
       if (card.tradition && card.tradition !== 'agnostic') {
-        expect(card.passage_ref, `${card.id} has tradition but no passage_ref`).toBeTruthy();
+        expect(card.sources, `${card.id} has tradition but no sources`).toBeDefined();
+        expect(card.sources![0].citation, `${card.id} sources[0].citation`).toBeTruthy();
       }
+    }
+  });
+
+  it('every card has a difficulty of low|medium|high', () => {
+    for (const card of allCards) {
+      expect(['low', 'medium', 'high']).toContain(card.difficulty);
     }
   });
 });

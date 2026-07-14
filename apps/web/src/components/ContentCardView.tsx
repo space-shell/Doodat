@@ -1,7 +1,6 @@
 import type { Component } from 'solid-js';
-import { Show } from 'solid-js';
+import { Show, For } from 'solid-js';
 import { getCardTask, type ContentCard as Card } from '@doodat/cards';
-import { state } from '../store';
 import { emit } from '../streams/intents';
 
 const DOMAIN_LABEL = { physical: 'Physical', mental: 'Mental', spiritual: 'Spiritual' } as const;
@@ -12,7 +11,7 @@ const DOMAIN_DOT = {
 } as const;
 
 const ContentCardView: Component<{ card: Card }> = (props) => {
-  const task = () => getCardTask(props.card, state.profile.currentIntensity);
+  const task = () => getCardTask(props.card);
   return (
     <article data-testid="content-card" class="neu-raised w-full max-w-md p-6">
       <header class="flex items-center gap-2 mb-4">
@@ -21,7 +20,7 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
           {DOMAIN_LABEL[props.card.domain]}
         </span>
         <span class="ml-auto text-xs font-semibold uppercase tracking-wide text-dodaat-gold">
-          {state.profile.currentIntensity}
+          {props.card.difficulty}
         </span>
       </header>
 
@@ -30,10 +29,26 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
       <Show when={props.card.context}>
         <p class="mt-4 text-sm italic leading-relaxed text-dodaat-textMuted">{props.card.context}</p>
       </Show>
-      <Show when={props.card.passage_ref}>
-        <p class="mt-2 text-xs text-dodaat-textMuted">
-          {props.card.tradition} · {props.card.passage_ref}
-        </p>
+      <Show when={props.card.sources?.length}>
+        <ul class="mt-2 space-y-1">
+          <For each={props.card.sources}>
+            {(src) => (
+              <li class="text-xs text-dodaat-textMuted">
+                {src.url ? (
+                  <a href={src.url} target="_blank" rel="noopener noreferrer" class="underline">
+                    {props.card.tradition ? `${props.card.tradition} · ` : ''}
+                    {src.citation}
+                  </a>
+                ) : (
+                  <span>
+                    {props.card.tradition ? `${props.card.tradition} · ` : ''}
+                    {src.citation}
+                  </span>
+                )}
+              </li>
+            )}
+          </For>
+        </ul>
       </Show>
 
       <div class="flex gap-3 mt-8">
