@@ -2,7 +2,6 @@ import {
   dealDailyCards,
   shouldTriggerAccountability,
   todayString,
-  weekString,
   INTENSITY_VOLUME,
 } from '@doodat/cards';
 import type { CardOutcome, ContentCard } from '@doodat/cards';
@@ -31,10 +30,10 @@ function buildOnboardingDeck(): DeckCard[] {
   ];
 }
 
-/** True when the ISO week of intensitySetAt differs from the week of `today`. */
-function needsWeeklyIntensity(profile: UserProfile, today: string): boolean {
+/** True when intensity was not set today (new day → daily check-in). */
+function needsDailyIntensity(profile: UserProfile, today: string): boolean {
   if (!profile.intensitySetAt) return true;
-  return weekString(new Date(profile.intensitySetAt)) !== weekString(new Date(today));
+  return new Date(profile.intensitySetAt).toISOString().slice(0, 10) !== today;
 }
 
 export function buildDailyDeck(profile: UserProfile, today: string, recentCardIds: string[]): DeckCard[] {
@@ -46,7 +45,7 @@ export function buildDailyDeck(profile: UserProfile, today: string, recentCardId
     recentCardIds,
   });
   const cards: DeckCard[] = [];
-  if (needsWeeklyIntensity(profile, today)) {
+  if (needsDailyIntensity(profile, today)) {
     cards.push({ id: 'sys-intensity-' + today, type: 'intensity_select' });
   }
   cards.push(...content);
@@ -150,6 +149,9 @@ export function reduce(state: AppState, intent: Intent): AppState {
     case 'DAILY_RESET':
       return handleDailyReset(state, intent.date);
 
+    case 'RESET_DAY_TO_WIZARD':
+      return handleResetDayToWizard(state);
+
     default:
       return state;
   }
@@ -246,6 +248,15 @@ function handleDailyReset(state: AppState, date: string): AppState {
       dayStartLastCompletedDate,
     },
     deck,
+    currentIndex: 0,
+  };
+}
+
+function handleResetDayToWizard(state: AppState): AppState {
+  return {
+    ...state,
+    daily: { ...state.daily, outcomes: [], accountabilityShown: false },
+    deck: buildOnboardingDeck(),
     currentIndex: 0,
   };
 }

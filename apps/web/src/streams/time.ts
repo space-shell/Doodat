@@ -1,6 +1,6 @@
 import { Observable, interval, OperatorFunction } from 'rxjs';
 import { distinctUntilChanged, map, skip } from 'rxjs/operators';
-import { todayString, weekString } from '@doodat/cards';
+import { todayString } from '@doodat/cards';
 
 /**
  * Pass-through operator: dedupes consecutive equal values, then drops the
@@ -19,9 +19,4 @@ export function emitOnChange<T>(): OperatorFunction<T, T> {
  */
 export function dailyReset$(pollMs = 60_000): Observable<string> {
   return interval(pollMs).pipe(map(() => todayString()), emitOnChange());
-}
-
-/** Emits the new ISO-week string whenever the week boundary is crossed. */
-export function weeklyReset$(pollMs = 60_000): Observable<string> {
-  return interval(pollMs).pipe(map(() => weekString()), emitOnChange());
 }

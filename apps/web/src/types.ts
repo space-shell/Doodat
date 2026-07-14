@@ -13,7 +13,7 @@ import type {
 export interface UserProfile {
   localId: string; // random persistent id — seeds the daily deal (replaces pubkey)
   currentIntensity: IntensityLevel;
-  intensitySetAt: number; // timestamp; ISO-week boundary drives re-selection
+  intensitySetAt: number; // timestamp; day boundary drives daily re-selection
   preferences?: UserPreferences;
   onboardingComplete: boolean;
 }
@@ -41,7 +41,7 @@ export type SystemCardType =
   | 'wizard_mental'
   | 'wizard_spiritual'
   | 'wizard_intensity'
-  | 'intensity_select' // weekly re-commit
+  | 'intensity_select' // daily check-in
   | 'accountability'
   | 'completion';
 
@@ -72,7 +72,8 @@ export type Intent =
   | { type: 'ADVANCE' } // move to next card (system cards)
   | { type: 'NAVIGATE'; index: number } // jump to a specific deck position (free navigation)
   | { type: 'DISMISS_ACCOUNTABILITY' }
-  | { type: 'DAILY_RESET'; date: string };
+  | { type: 'DAILY_RESET'; date: string }
+  | { type: 'RESET_DAY_TO_WIZARD' };
 
 export function isContentCard(card: DeckCard): card is ContentCard {
   return card.type === 'content';

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { reduce, initialState, dayBefore } from './reducer';
+import { reduce, initialState, dayBefore, buildDailyDeck } from './reducer';
 import type { AppState, UserProfile, StreakState } from '../types';
 import type { UserPreferences } from '@doodat/cards';
 import { dealDailyCards } from '@doodat/cards';
@@ -291,12 +291,14 @@ describe('DAILY_RESET', () => {
     expect(next.daily.outcomes).toEqual([]);
     expect(next.daily.accountabilityShown).toBe(false);
     expect(next.currentIndex).toBe(0);
-    expect(next.deck.length).toBe(7); // 6 content + completion (medium volume)
+    // intensity was set on DATE (prev day) → intensity_select prepended: 1 + 6 content + completion = 8
+    expect(next.deck.length).toBe(8);
+    expect(next.deck[0].type).toBe('intensity_select');
   });
 
-  it('prepends an intensity_select card on a new ISO week', () => {
+  it('prepends an intensity_select card on a new day', () => {
     const s = makeState();
-    const next = reduce(s, { type: 'DAILY_RESET', date: '2026-01-22' }); // next week
+    const next = reduce(s, { type: 'DAILY_RESET', date: '2026-01-16' }); // next day
     expect(next.deck[0].type).toBe('intensity_select');
   });
 
@@ -402,5 +404,56 @@ describe('dayBefore', () => {
     expect(dayBefore('2026-03-01')).toBe('2026-02-28'); // non-leap year Feb
     expect(dayBefore('2024-03-01')).toBe('2024-02-29'); // leap year
     expect(dayBefore('2026-01-01')).toBe('2025-12-31'); // year boundary
+  });
+});
+
+describe('buildDailyDeck — daily intensity', () => {
+  it('does not prepend intensity_select when intensity was set today', () => {
+    const profile = makeProfile({ intensitySetAt: new Date(DATE).getTime() });
+    const deck = buildDailyDeck(profile, DATE, []);
+    expect(deck[0].type).not.toBe('intensity_select');
+  });
+
+  it('prepends intensity_select when intensity was set on a previous day', () => {
+    const profile = makeProfile({ intensitySetAt: new Date('2020-01-01').getTime() });
+    const deck = buildDailyDeck(profile, DATE, []);
+    expect(deck[0].type).toBe('intensity_select');
+  });
+
+  it('prepends intensity_select when intensitySetAt is 0 (never set)', () => {
+    const profile = makeProfile({ intensitySetAt: 0 });
+    const deck = buildDailyDeck(profile, DATE, []);
+    expect(deck[0].type).toBe('intensity_select');
+  });
+});
+
+describe('RESET_DAY_TO_WIZARD', () => {
+  it('clears outcomes and shows the full wizard deck', () => {
+    const s = makeState({
+      daily: { date: DATE, outcomes: [{ cardId: 'x', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 1 }], accountabilityShown: true },
+      currentIndex: 3,
+    });
+    const next = reduce(s, { type: 'RESET_DAY_TO_WIZARD' });
+    expect(next.daily.outcomes).toEqual([]);
+    expect(next.daily.accountabilityShown).toBe(false);
+    expect(next.currentIndex).toBe(0);
+    expect(next.deck.map((c) => c.type)).toEqual([
+      'welcome',
+      'wizard_physical',
+      'wizard_mental',
+      'wizard_spiritual',
+      'wizard_intensity',
+    ]);
+  });
+
+  it('preserves profile, streak, and recentCardIds', () => {
+    const s = makeState({
+      recentCardIds: ['phys-001', 'ment-002'],
+      streak: { count: 5, lastCompletedDate: dayBefore(DATE), dayStartCount: 4, dayStartLastCompletedDate: dayBefore(DATE) },
+    });
+    const next = reduce(s, { type: 'RESET_DAY_TO_WIZARD' });
+    expect(next.profile).toEqual(s.profile);
+    expect(next.streak).toEqual(s.streak);
+    expect(next.recentCardIds).toEqual(s.recentCardIds);
   });
 });
