@@ -94,70 +94,136 @@ export function cardWeight(
   return Math.max(weight, 0.1);
 }
 
-/** Select `count` cards from a domain pool via weighted random, avoiding recent ids. */
-function selectCards(
+// ─── Daily volume + difficulty distribution ───────────────────────────────────
+
+/** User-facing intensity (low|medium|high) maps to a per-day card count. */
+export const INTENSITY_VOLUME: Record<IntensityLevel, 3 | 6 | 9> = {
+  low: 3,
+  medium: 6,
+  high: 9,
+};
+
+/**
+ * Per-volume difficulty weights for the non-guaranteed draws. Tunable. Higher
+ * volumes skew toward harder cards. See planDifficulties for how guarantees
+ * combine with these (low: none; medium: 1 high; high: seeded 2-or-3 high).
+ */
+const DIFFICULTY_WEIGHTS: Record<3 | 6 | 9, Record<IntensityLevel, number>> = {
+  3: { low: 0.62, medium: 0.33, high: 0.05 },
+  6: { low: 0.30, medium: 0.55, high: 0.15 },
+  9: { low: 0.30, medium: 0.45, high: 0.25 },
+};
+
+const DOMAIN_ORDER: Domain[] = ['physical', 'mental', 'spiritual'];
+const DOMAIN_POOL: Record<Domain, ContentCard[]> = {
+  physical: physicalCards,
+  mental: mentalCards,
+  spiritual: spiritualCards,
+};
+
+function weightedDifficulty(weights: Record<IntensityLevel, number>, rng: () => number): IntensityLevel {
+  let r = rng() * (weights.low + weights.medium + weights.high);
+  for (const lvl of ['low', 'medium', 'high'] as const) {
+    r -= weights[lvl];
+    if (r <= 0) return lvl;
+  }
+  return 'high';
+}
+
+function shuffle<T>(arr: T[], rng: () => number): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * Build the day's difficulty plan: `volume` labels. Guaranteed highs are placed
+ * first, the remainder drawn from DIFFICULTY_WEIGHTS, then the whole plan is
+ * shuffled so guarantees scatter across the three domains. Exported so the
+ * distribution policy is unit-testable in isolation.
+ */
+export function planDifficulties(volume: 3 | 6 | 9, rng: () => number): IntensityLevel[] {
+  const guaranteedHigh = volume === 3 ? 0 : volume === 6 ? 1 : 2 + (rng() < 0.5 ? 0 : 1);
+  const plan: IntensityLevel[] = [];
+  for (let i = 0; i < guaranteedHigh; i++) plan.push('high');
+  const weights = DIFFICULTY_WEIGHTS[volume];
+  while (plan.length < volume) plan.push(weightedDifficulty(weights, rng));
+  return shuffle(plan, rng);
+}
+
+/**
+ * Pick one card of `difficulty` from a domain pool, weighted by preferences and
+ * avoiding already-used + recent ids. Falls back gracefully: relax recent
+ * exclusion, then relax the difficulty filter, so a thin per-difficulty pool
+ * never shortens the deal.
+ */
+function pickOne(
   pool: ContentCard[],
   domain: Domain,
-  count: number,
-  recentIds: Set<string>,
+  difficulty: IntensityLevel,
+  used: Set<string>,
+  recentSet: Set<string>,
   preferences: UserPreferences | undefined,
   rng: () => number,
-): ContentCard[] {
-  const available = pool.filter((c) => !recentIds.has(c.id));
-  const usablePool = available.length >= count ? available : pool;
+): ContentCard | undefined {
+  const byDiff = pool.filter((c) => c.difficulty === difficulty && !used.has(c.id));
+  let candidates = byDiff.filter((c) => !recentSet.has(c.id));
+  if (candidates.length === 0) candidates = byDiff; // relax recent exclusion
+  if (candidates.length === 0) candidates = pool.filter((c) => !used.has(c.id)); // relax difficulty
+  if (candidates.length === 0) return undefined;
 
-  const weighted: Array<{ card: ContentCard; weight: number }> = usablePool.map((card) => ({
-    card,
-    weight: cardWeight(card, preferences, domain),
-  }));
-
-  const selected: ContentCard[] = [];
-  const usedInSelection = new Set<string>();
-
-  for (let i = 0; i < count && weighted.length > 0; i++) {
-    const totalWeight = weighted
-      .filter((w) => !usedInSelection.has(w.card.id))
-      .reduce((sum, w) => sum + w.weight, 0);
-
-    let rand = rng() * totalWeight;
-
-    for (const { card, weight } of weighted) {
-      if (usedInSelection.has(card.id)) continue;
-      rand -= weight;
-      if (rand <= 0) {
-        selected.push(card);
-        usedInSelection.add(card.id);
-        break;
-      }
-    }
+  const total = candidates.reduce((s, c) => s + cardWeight(c, preferences, domain), 0);
+  let r = rng() * total;
+  for (const c of candidates) {
+    r -= cardWeight(c, preferences, domain);
+    if (r <= 0) return c;
   }
-
-  return selected;
+  return candidates[candidates.length - 1];
 }
 
 export interface DailyDealOptions {
   date: string;
   pubkey: string;
-  intensity: IntensityLevel;
+  volume: 3 | 6 | 9;
   preferences?: UserPreferences;
   recentCardIds?: string[]; // ids dealt in the last ~7 days (kept to 63 = 7 × 9)
 }
 
 /**
- * Deal today's 9 cards: 3 physical, 3 mental, 3 spiritual.
- * Order: physical → mental → spiritual. Deterministic for a given date + pubkey.
+ * Deal today's cards for a given volume: split evenly across the three domains
+ * (physical → mental → spiritual) and draw each slot's difficulty from
+ * planDifficulties. Deterministic for a given date + pubkey + volume.
  */
 export function dealDailyCards(options: DailyDealOptions): ContentCard[] {
-  const { date, pubkey, preferences, recentCardIds = [] } = options;
+  const { date, pubkey, volume, preferences, recentCardIds = [] } = options;
   const recentSet = new Set(recentCardIds);
   const rng = mulberry32(dateSeed(date, pubkey));
+  const plan = planDifficulties(volume, rng);
 
-  const physical = selectCards(physicalCards, 'physical', 3, recentSet, preferences, rng);
-  const mental = selectCards(mentalCards, 'mental', 3, recentSet, preferences, rng);
-  const spiritual = selectCards(spiritualCards, 'spiritual', 3, recentSet, preferences, rng);
+  const labelsByDomain: Record<Domain, IntensityLevel[]> = {
+    physical: [],
+    mental: [],
+    spiritual: [],
+  };
+  plan.forEach((lvl, i) => labelsByDomain[DOMAIN_ORDER[i % 3]].push(lvl));
 
-  return [...physical, ...mental, ...spiritual];
+  const used = new Set<string>();
+  const out: ContentCard[] = [];
+  for (const domain of DOMAIN_ORDER) {
+    for (const difficulty of labelsByDomain[domain]) {
+      const card = pickOne(DOMAIN_POOL[domain], domain, difficulty, used, recentSet, preferences, rng);
+      if (card) {
+        used.add(card.id);
+        out.push(card);
+      }
+    }
+  }
+  return out;
 }
+
 
 /** Get the task text for a card — selected by the card's own `difficulty`. */
 export function getCardTask(card: ContentCard): string {

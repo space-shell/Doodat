@@ -3,6 +3,7 @@ import {
   shouldTriggerAccountability,
   todayString,
   weekString,
+  INTENSITY_VOLUME,
 } from '@doodat/cards';
 import type { CardOutcome, ContentCard } from '@doodat/cards';
 import type { AppState, Intent, UserProfile, StreakState, DeckCard } from '../types';
@@ -40,7 +41,7 @@ export function buildDailyDeck(profile: UserProfile, today: string, recentCardId
   const content = dealDailyCards({
     date: today,
     pubkey: profile.localId,
-    intensity: profile.currentIntensity,
+    volume: INTENSITY_VOLUME[profile.currentIntensity],
     preferences: profile.preferences,
     recentCardIds,
   });

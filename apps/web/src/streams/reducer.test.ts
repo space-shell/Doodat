@@ -26,7 +26,7 @@ function makeProfile(over: Partial<UserProfile> = {}): UserProfile {
 function makeState(over: Partial<AppState> = {}): AppState {
   const profile = makeProfile();
   const deck = [
-    ...dealDailyCards({ date: DATE, pubkey: profile.localId, intensity: 'medium' }),
+    ...dealDailyCards({ date: DATE, pubkey: profile.localId, volume: 6 }),
     { id: `sys-completion-${DATE}`, type: 'completion' as const },
   ];
   return {
@@ -189,13 +189,13 @@ describe('SWIPE', () => {
 
   it('auto-navigates to completion when all content cards are resolved', () => {
     const s = makeState();
-    // Resolve all 9 content cards
+    const contentCount = s.deck.filter((c) => c.type === 'content').length;
     let state = s;
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < contentCount; i++) {
       const card = contentAt(state, i);
       state = reduce(state, { type: 'SWIPE', card, direction: 'complete' });
     }
-    // All 9 resolved → should be on the completion card
+    // All content resolved → should be on the completion card
     expect(state.deck[state.currentIndex].type).toBe('completion');
   });
 
@@ -272,7 +272,7 @@ describe('DAILY_RESET', () => {
     expect(next.daily.outcomes).toEqual([]);
     expect(next.daily.accountabilityShown).toBe(false);
     expect(next.currentIndex).toBe(0);
-    expect(next.deck.length).toBe(10); // 9 content + completion
+    expect(next.deck.length).toBe(7); // 6 content + completion (medium volume)
   });
 
   it('prepends an intensity_select card on a new ISO week', () => {

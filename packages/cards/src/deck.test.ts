@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { dealDailyCards, getCardTask, cardWeight } from './deck';
+import { dealDailyCards, getCardTask, cardWeight, planDifficulties, INTENSITY_VOLUME } from './deck';
 import { physicalCards, cardById } from './data';
 import type { ContentCard, UserPreferences } from './types';
 
-const FIXED = { date: '2026-01-15', pubkey: 'test-pubkey-abc', intensity: 'medium' as const };
+const FIXED = { date: '2026-01-15', pubkey: 'test-pubkey-abc', volume: 9 as const };
 
 describe('dealDailyCards — structure', () => {
   it('deals exactly 9 cards', () => {
@@ -59,6 +59,102 @@ describe('dealDailyCards — recent-card de-duplication', () => {
     const recent = physicalCards.slice(0, 28).map((c) => c.id);
     const deck = dealDailyCards({ ...FIXED, recentCardIds: recent });
     expect(deck.slice(0, 3)).toHaveLength(3); // still deals 3, from full pool
+  });
+});
+
+describe('INTENSITY_VOLUME', () => {
+  it('maps intensity levels to 3 / 6 / 9 cards', () => {
+    expect(INTENSITY_VOLUME).toEqual({ low: 3, medium: 6, high: 9 });
+  });
+});
+
+describe('dealDailyCards — volume + domain split', () => {
+  it('deals exactly `volume` cards for each volume', () => {
+    expect(dealDailyCards({ ...FIXED, volume: 3 })).toHaveLength(3);
+    expect(dealDailyCards({ ...FIXED, volume: 6 })).toHaveLength(6);
+    expect(dealDailyCards({ ...FIXED, volume: 9 })).toHaveLength(9);
+  });
+
+  it('splits the volume evenly across domains (6 -> 2/2/2) in phys -> ment -> spir order', () => {
+    const deck = dealDailyCards({ ...FIXED, volume: 6 });
+    expect(deck.slice(0, 2).every((c) => c.domain === 'physical')).toBe(true);
+    expect(deck.slice(2, 4).every((c) => c.domain === 'mental')).toBe(true);
+    expect(deck.slice(4, 6).every((c) => c.domain === 'spiritual')).toBe(true);
+  });
+
+  it('never deals the same card twice within one deck, at every volume', () => {
+    for (const volume of [3, 6, 9] as const) {
+      const ids = dealDailyCards({ ...FIXED, volume }).map((c) => c.id);
+      expect(new Set(ids).size, `volume ${volume}`).toBe(ids.length);
+    }
+  });
+});
+
+// Seeded RNG (mulberry32) so the distribution assertions are deterministic, never flaky.
+function rngFrom(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+describe('planDifficulties — distribution policy', () => {
+  it('low volume (3): no guaranteed highs, length 3', () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      expect(planDifficulties(3, rngFrom(seed))).toHaveLength(3);
+    }
+  });
+
+  it('medium volume (6): always at least one high (guaranteed)', () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const plan = planDifficulties(6, rngFrom(seed));
+      expect(plan).toHaveLength(6);
+      expect(plan.filter((l) => l === 'high').length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('high volume (9): always at least two highs (guaranteed 2 or 3)', () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      const highs = planDifficulties(9, rngFrom(seed)).filter((l) => l === 'high').length;
+      expect(highs).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it('high volume (9): the guaranteed floor is exactly 2 over many seeds (2-or-3 varies)', () => {
+    let minHighs = Infinity;
+    for (let seed = 1; seed <= 200; seed++) {
+      minHighs = Math.min(minHighs, planDifficulties(9, rngFrom(seed)).filter((l) => l === 'high').length);
+    }
+    expect(minHighs).toBe(2);
+  });
+
+  it('low volume (3): highs are rare but reachable across many seeds', () => {
+    let withHigh = 0;
+    for (let seed = 1; seed <= 1000; seed++) {
+      if (planDifficulties(3, rngFrom(seed)).includes('high')) withHigh++;
+    }
+    // P(>=1 high) ~ 0.14 per plan -> comfortably between 0 and 300 over 1000 seeds.
+    expect(withHigh).toBeGreaterThan(0);
+    expect(withHigh).toBeLessThan(300);
+  });
+});
+
+describe('dealDailyCards — dealt difficulty distribution', () => {
+  it('medium-volume decks always include at least one high-difficulty card', () => {
+    for (let i = 0; i < 40; i++) {
+      const deck = dealDailyCards({ ...FIXED, volume: 6, pubkey: `seed-${i}` });
+      expect(deck.some((c) => c.difficulty === 'high'), `seed i=${i}`).toBe(true);
+    }
+  });
+
+  it('high-volume decks always include at least two high-difficulty cards', () => {
+    for (let i = 0; i < 40; i++) {
+      const deck = dealDailyCards({ ...FIXED, volume: 9, pubkey: `seed-${i}` });
+      expect(deck.filter((c) => c.difficulty === 'high').length, `seed i=${i}`).toBeGreaterThanOrEqual(2);
+    }
   });
 });
 
