@@ -3,7 +3,6 @@
 import type {
   ContentCard,
   IntensityLevel,
-  SwipeDirection,
   UserPreferences,
   CardOutcome,
 } from '@doodat/cards';
@@ -21,7 +20,6 @@ export interface UserProfile {
 export interface DailyState {
   date: string; // YYYY-MM-DD
   outcomes: CardOutcome[];
-  accountabilityShown: boolean; // suppresses re-trigger (US-005)
 }
 
 export interface StreakState {
@@ -42,7 +40,6 @@ export type SystemCardType =
   | 'wizard_spiritual'
   | 'wizard_intensity'
   | 'intensity_select' // daily check-in
-  | 'accountability'
   | 'completion';
 
 export interface SystemCard {
@@ -68,10 +65,9 @@ export interface AppState {
 export type Intent =
   | { type: 'SET_PREFERENCES'; preferences: Partial<UserPreferences> }
   | { type: 'SET_INTENSITY'; intensity: IntensityLevel }
-  | { type: 'SWIPE'; card: ContentCard; direction: SwipeDirection; actionResponses?: Record<string, string> }
+  | { type: 'SWIPE'; card: ContentCard; actionResponses?: Record<string, string> }
   | { type: 'ADVANCE' } // move to next card (system cards)
   | { type: 'NAVIGATE'; index: number } // jump to a specific deck position (free navigation)
-  | { type: 'DISMISS_ACCOUNTABILITY' }
   | { type: 'DAILY_RESET'; date: string }
   | { type: 'RESET_DAY_TO_WIZARD' };
 

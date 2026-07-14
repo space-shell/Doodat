@@ -7,7 +7,6 @@ const DOMAIN_LABEL = { physical: 'Physical', mental: 'Mental', spiritual: 'Spiri
 const CompletionSummary: Component = () => {
   const outcomes = () => state.daily.outcomes;
   const completed = () => outcomes().filter((o) => o.swipeDirection === 'complete').length;
-  const skipped = () => outcomes().filter((o) => o.swipeDirection === 'skip').length;
   const breakdown = () => {
     const b: Record<string, number> = {};
     for (const o of outcomes()) {
@@ -22,14 +21,10 @@ const CompletionSummary: Component = () => {
       <p class="mt-2 text-sm text-dodaat-textMuted">do one day at a time.</p>
 
       <div class="neu-inset mt-6 p-4">
-        <div class="flex justify-around">
+        <div class="flex justify-center">
           <div>
             <div class="text-3xl font-bold text-dodaat-goldDark">{completed()}</div>
             <div class="text-xs uppercase tracking-wide text-dodaat-textMuted">completed</div>
-          </div>
-          <div>
-            <div class="text-3xl font-bold text-dodaat-textSecondary">{skipped()}</div>
-            <div class="text-xs uppercase tracking-wide text-dodaat-textMuted">skipped</div>
           </div>
         </div>
 

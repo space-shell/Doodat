@@ -64,7 +64,7 @@ function loadSeed(): AppState {
   if (!persistedDaily || persistedDaily.date !== today) {
     return {
       profile,
-      daily: { date: today, outcomes: [], accountabilityShown: false },
+      daily: { date: today, outcomes: [] },
       recentCardIds,
       streak,
       deck: buildDailyDeck(profile, today, recentCardIds),

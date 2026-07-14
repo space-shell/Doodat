@@ -31,7 +31,7 @@ function makeState(over: Partial<AppState> = {}): AppState {
   ];
   return {
     profile,
-    daily: { date: DATE, outcomes: [], accountabilityShown: false },
+    daily: { date: DATE, outcomes: [] },
     recentCardIds: [],
     streak: { ...ZERO_STREAK },
     deck,
@@ -83,7 +83,7 @@ describe('SET_INTENSITY', () => {
     expect(next.currentIndex).toBe(0);
   });
 
-  it('updates intensitySetAt on weekly re-commit (already onboarded)', () => {
+  it('updates intensitySetAt on daily re-commit (already onboarded)', () => {
     const before = makeState({ profile: makeProfile({ intensitySetAt: 1000 }) });
     const next = reduce(before, { type: 'SET_INTENSITY', intensity: 'low' });
     expect(next.profile.currentIntensity).toBe('low');
@@ -114,7 +114,7 @@ describe('SWIPE', () => {
   it('records a complete outcome and navigates to next incomplete', () => {
     const s = makeState({ currentIndex: 0 });
     const card = contentAt(s, 0);
-    const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card });
     expect(next.daily.outcomes).toHaveLength(1);
     expect(next.daily.outcomes[0].swipeDirection).toBe('complete');
     expect(next.daily.outcomes[0].cardId).toBe(card.id);
@@ -128,7 +128,6 @@ describe('SWIPE', () => {
     const next = reduce(s, {
       type: 'SWIPE',
       card,
-      direction: 'complete',
       actionResponses: { 'c:journal': 'my reflection' },
     });
     expect(next.daily.outcomes[0].actionResponses).toEqual({ 'c:journal': 'my reflection' });
@@ -137,21 +136,14 @@ describe('SWIPE', () => {
   it('omits actionResponses when none are provided', () => {
     const s = makeState({ currentIndex: 0 });
     const card = contentAt(s, 0);
-    const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card });
     expect(next.daily.outcomes[0].actionResponses).toBeUndefined();
-  });
-
-  it('records a skip outcome', () => {
-    const s = makeState();
-    const card = contentAt(s, 0);
-    const next = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
-    expect(next.daily.outcomes[0].swipeDirection).toBe('skip');
   });
 
   it('appends the swiped card id to recentCardIds (capped at 63)', () => {
     const s = makeState({ recentCardIds: Array.from({ length: 63 }, (_, i) => `phys-${i}`) });
     const card = contentAt(s, 0);
-    const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card });
     expect(next.recentCardIds).toHaveLength(63);
     expect(next.recentCardIds[62]).toBe(card.id);
   });
@@ -159,23 +151,21 @@ describe('SWIPE', () => {
   it('updates the outcome in place when re-swiping the same card', () => {
     const s = makeState({ currentIndex: 0 });
     const card = contentAt(s, 0);
-    const skipped = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
-    expect(skipped.daily.outcomes).toHaveLength(1);
-    expect(skipped.daily.outcomes[0].swipeDirection).toBe('skip');
-    // Navigate back to card 0 and complete it
-    const navBack = reduce(skipped, { type: 'NAVIGATE', index: 0 });
-    const completed = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0), direction: 'complete' });
+    const first = reduce(s, { type: 'SWIPE', card });
+    expect(first.daily.outcomes).toHaveLength(1);
+    // Navigate back to card 0 and swipe again
+    const navBack = reduce(first, { type: 'NAVIGATE', index: 0 });
+    const second = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0) });
     // Still only 1 outcome — replaced, not appended
-    expect(completed.daily.outcomes).toHaveLength(1);
-    expect(completed.daily.outcomes[0].swipeDirection).toBe('complete');
+    expect(second.daily.outcomes).toHaveLength(1);
   });
 
   it('does not duplicate the card id in recentCardIds on re-swipe', () => {
     const s = makeState({ currentIndex: 0 });
     const card = contentAt(s, 0);
-    const first = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
+    const first = reduce(s, { type: 'SWIPE', card });
     const navBack = reduce(first, { type: 'NAVIGATE', index: 0 });
-    const second = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0), direction: 'complete' });
+    const second = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0) });
     expect(second.recentCardIds.filter((id) => id === card.id)).toHaveLength(1);
   });
 
@@ -189,7 +179,6 @@ describe('SWIPE', () => {
           { cardId: 'pre-0', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 1 },
           { cardId: 'pre-1', domain: 'mental', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 2 },
         ],
-        accountabilityShown: false,
       },
     });
     // Override the outcome cardIds to match the actual deck card ids
@@ -198,7 +187,7 @@ describe('SWIPE', () => {
     s.daily.outcomes[0].cardId = card0.id;
     s.daily.outcomes[1].cardId = card1.id;
     const card2 = contentAt(s, 2);
-    const next = reduce(s, { type: 'SWIPE', card: card2, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card: card2 });
     // Cards 0, 1, 2 are now resolved → next incomplete is card 3
     expect(next.currentIndex).toBe(3);
   });
@@ -209,34 +198,16 @@ describe('SWIPE', () => {
     let state = s;
     for (let i = 0; i < contentCount; i++) {
       const card = contentAt(state, i);
-      state = reduce(state, { type: 'SWIPE', card, direction: 'complete' });
+      state = reduce(state, { type: 'SWIPE', card });
     }
     // All content resolved → should be on the completion card
     expect(state.deck[state.currentIndex].type).toBe('completion');
   });
 
-  it('injects an accountability card after the 3rd skip', () => {
-    let s = makeState();
-    for (let i = 0; i < 3; i++) {
-      const card = contentAt(s, s.currentIndex);
-      s = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
-    }
-    expect(s.deck[s.currentIndex].type).toBe('accountability');
-  });
-
-  it('does not inject accountability once already shown', () => {
-    let s = makeState({ daily: { date: DATE, outcomes: [], accountabilityShown: true } });
-    for (let i = 0; i < 3; i++) {
-      const card = contentAt(s, s.currentIndex);
-      s = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
-    }
-    expect(s.deck.some((c) => c.type === 'accountability')).toBe(false);
-  });
-
   it('is a no-op when there is no current content card', () => {
     const s = makeState({ currentIndex: 99 });
     const before = JSON.parse(JSON.stringify(s));
-    const next = reduce(s, { type: 'SWIPE', card: s.deck[0] as never, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card: s.deck[0] as never });
     expect(next).toEqual(before);
   });
 });
@@ -255,22 +226,6 @@ describe('ADVANCE', () => {
   });
 });
 
-describe('DISMISS_ACCOUNTABILITY', () => {
-  it('marks accountability shown and navigates to the first unresolved card', () => {
-    // 3 skips on cards 0-2, accountability spliced at index 3
-    let s = makeState();
-    for (let i = 0; i < 3; i++) {
-      const card = contentAt(s, s.currentIndex);
-      s = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
-    }
-    expect(s.deck[s.currentIndex].type).toBe('accountability');
-    const next = reduce(s, { type: 'DISMISS_ACCOUNTABILITY' });
-    expect(next.daily.accountabilityShown).toBe(true);
-    // Cards 0-2 are resolved (skipped) → first unresolved is card 3 (now at index 4 due to splice)
-    expect(next.deck[next.currentIndex].type).toBe('content');
-  });
-});
-
 describe('DAILY_RESET', () => {
   it('is a no-op when the date is unchanged', () => {
     const s = makeState();
@@ -280,13 +235,12 @@ describe('DAILY_RESET', () => {
 
   it('resets daily state and rebuilds the deck on a new day', () => {
     const s = makeState({
-      daily: { date: DATE, outcomes: [{ cardId: 'x', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 1 }], accountabilityShown: true },
+      daily: { date: DATE, outcomes: [{ cardId: 'x', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 1 }] },
       currentIndex: 5,
     });
     const next = reduce(s, { type: 'DAILY_RESET', date: '2026-01-16' });
     expect(next.daily.date).toBe('2026-01-16');
     expect(next.daily.outcomes).toEqual([]);
-    expect(next.daily.accountabilityShown).toBe(false);
     expect(next.currentIndex).toBe(0);
     // intensity was set on DATE (prev day) → intensity_select prepended
     // volume is randomized (medium: 4-7) → content count varies
@@ -329,7 +283,7 @@ describe('streak tracking', () => {
   it('starts the streak at 1 on first completion', () => {
     const s = makeState({ streak: { ...ZERO_STREAK } });
     const card = contentAt(s, 0);
-    const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card });
     expect(next.streak.count).toBe(1);
     expect(next.streak.lastCompletedDate).toBe(DATE);
   });
@@ -337,7 +291,7 @@ describe('streak tracking', () => {
   it('does not double-count same-day completions', () => {
     const s = makeState({ streak: { count: 1, lastCompletedDate: DATE, dayStartCount: 0, dayStartLastCompletedDate: null } });
     const card = contentAt(s, 1);
-    const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card });
     expect(next.streak.count).toBe(1);
   });
 
@@ -345,10 +299,10 @@ describe('streak tracking', () => {
     const yesterday = dayBefore(DATE);
     const s = makeState({
       streak: { count: 3, lastCompletedDate: yesterday, dayStartCount: 3, dayStartLastCompletedDate: yesterday },
-      daily: { date: DATE, outcomes: [], accountabilityShown: false },
+      daily: { date: DATE, outcomes: [] },
     });
     const card = contentAt(s, 0);
-    const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card });
     expect(next.streak.count).toBe(4);
     expect(next.streak.lastCompletedDate).toBe(DATE);
   });
@@ -356,46 +310,12 @@ describe('streak tracking', () => {
   it('resets to 1 when there is a gap > 1 day', () => {
     const s = makeState({
       streak: { count: 0, lastCompletedDate: '2026-01-10', dayStartCount: 0, dayStartLastCompletedDate: '2026-01-10' },
-      daily: { date: DATE, outcomes: [], accountabilityShown: false },
+      daily: { date: DATE, outcomes: [] },
     });
     const card = contentAt(s, 0);
-    const next = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
+    const next = reduce(s, { type: 'SWIPE', card });
     expect(next.streak.count).toBe(1);
     expect(next.streak.lastCompletedDate).toBe(DATE);
-  });
-
-  it('reverts the streak when flipping a completion to a skip', () => {
-    // Start with a streak of 3 from yesterday
-    const yesterday = dayBefore(DATE);
-    const s = makeState({
-      streak: { count: 3, lastCompletedDate: yesterday, dayStartCount: 3, dayStartLastCompletedDate: yesterday },
-    });
-    // Complete card 0 → streak extends to 4
-    const card = contentAt(s, 0);
-    const completed = reduce(s, { type: 'SWIPE', card, direction: 'complete' });
-    expect(completed.streak.count).toBe(4);
-    // Navigate back and flip to skip
-    const navBack = reduce(completed, { type: 'NAVIGATE', index: 0 });
-    const flipped = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0), direction: 'skip' });
-    // No completions today → streak reverts to dayStart (3)
-    expect(flipped.streak.count).toBe(3);
-    expect(flipped.streak.lastCompletedDate).toBe(yesterday);
-  });
-
-  it('increments the streak when flipping a skip to a completion', () => {
-    const yesterday = dayBefore(DATE);
-    const s = makeState({
-      streak: { count: 3, lastCompletedDate: yesterday, dayStartCount: 3, dayStartLastCompletedDate: yesterday },
-    });
-    // Skip card 0
-    const card = contentAt(s, 0);
-    const skipped = reduce(s, { type: 'SWIPE', card, direction: 'skip' });
-    expect(skipped.streak.count).toBe(3); // no change
-    // Navigate back and flip to complete
-    const navBack = reduce(skipped, { type: 'NAVIGATE', index: 0 });
-    const flipped = reduce(navBack, { type: 'SWIPE', card: contentAt(navBack, 0), direction: 'complete' });
-    expect(flipped.streak.count).toBe(4);
-    expect(flipped.streak.lastCompletedDate).toBe(DATE);
   });
 });
 
@@ -431,12 +351,11 @@ describe('buildDailyDeck — daily intensity', () => {
 describe('RESET_DAY_TO_WIZARD', () => {
   it('clears outcomes and shows the full wizard deck', () => {
     const s = makeState({
-      daily: { date: DATE, outcomes: [{ cardId: 'x', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 1 }], accountabilityShown: true },
+      daily: { date: DATE, outcomes: [{ cardId: 'x', domain: 'physical', swipeDirection: 'complete', intensity: 'medium', difficulty: 'medium', timestamp: 1 }] },
       currentIndex: 3,
     });
     const next = reduce(s, { type: 'RESET_DAY_TO_WIZARD' });
     expect(next.daily.outcomes).toEqual([]);
-    expect(next.daily.accountabilityShown).toBe(false);
     expect(next.currentIndex).toBe(0);
     expect(next.deck.map((c) => c.type)).toEqual([
       'welcome',

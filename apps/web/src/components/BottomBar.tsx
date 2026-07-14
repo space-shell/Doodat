@@ -58,12 +58,6 @@ const BottomBar: Component<{ cardType?: string }> = (props) => {
         </button>
       </Match>
 
-      <Match when={props.cardType === 'accountability'}>
-        <button data-testid="dismiss-accountability" class={BTN} onClick={() => emit({ type: 'DISMISS_ACCOUNTABILITY' })}>
-          Continue
-        </button>
-      </Match>
-
       <Match when={props.cardType === 'completion'}>
         <button data-testid="back-to-cards-btn" class={BTN} onClick={() => emit({ type: 'NAVIGATE', index: 0 })}>
           ← Back to cards

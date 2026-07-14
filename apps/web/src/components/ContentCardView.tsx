@@ -21,12 +21,11 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
       (a) => a.type === 'text' && (!a.difficulties || a.difficulties.includes(props.card.difficulty)),
     );
 
-  const commit = (direction: 'complete' | 'skip') => {
+  const commit = () => {
     const r = responses();
     emit({
       type: 'SWIPE',
       card: props.card,
-      direction,
       actionResponses: Object.keys(r).length ? r : undefined,
     });
   };
@@ -94,18 +93,11 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
         </div>
       </Show>
 
-      <div class="flex gap-3 mt-auto pt-8">
-        <button
-          data-testid="skip-btn"
-          class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-textSecondary"
-          onClick={() => commit('skip')}
-        >
-          Skip
-        </button>
+      <div class="mt-auto pt-8">
         <button
           data-testid="complete-btn"
-          class="neu-button flex-1 py-3 text-sm font-semibold text-dodaat-goldDark"
-          onClick={() => commit('complete')}
+          class="neu-button w-full py-3 text-sm font-semibold text-dodaat-goldDark"
+          onClick={() => commit()}
         >
           Done
         </button>

@@ -28,7 +28,6 @@ const CardNav: Component = () => {
               'neu-inset': state.currentIndex === item.deckIndex,
               'text-dodaat-textMuted': statusOf(item.cardId) === undefined,
               'text-dodaat-complete': statusOf(item.cardId) === 'complete',
-              'text-dodaat-skip': statusOf(item.cardId) === 'skip',
             }}
             onClick={() => emit({ type: 'NAVIGATE', index: item.deckIndex })}
             data-testid={`nav-btn-${i() + 1}`}

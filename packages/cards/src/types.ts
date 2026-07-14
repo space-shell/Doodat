@@ -6,8 +6,6 @@ export type Domain = 'physical' | 'mental' | 'spiritual';
 
 export type IntensityLevel = 'low' | 'medium' | 'high';
 
-export type SwipeDirection = 'complete' | 'skip';
-
 /**
  * A single practice card. The three intensity fields hold the actionable
  * instruction at each dose; `difficulty` decides WHICH dose renders (and drives
@@ -88,7 +86,7 @@ export interface UserPreferences {
 export interface CardOutcome {
   cardId: string;
   domain: Domain;
-  swipeDirection: SwipeDirection;
+  swipeDirection: 'complete';
   intensity: IntensityLevel;   // the day's volume level (low=3 / medium=6 / high=9 cards)
   difficulty: IntensityLevel;  // the dealt card's intrinsic difficulty
   actionResponses?: Record<string, string>; // keyed by CardAction.id

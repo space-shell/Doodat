@@ -8,7 +8,6 @@ import CardNav from './components/CardNav';
 import BottomBar from './components/BottomBar';
 import Onboarding from './components/Onboarding';
 import IntensitySelect from './components/IntensitySelect';
-import AccountabilityCard from './components/AccountabilityCard';
 import CompletionSummary from './components/CompletionSummary';
 import SettingsView from './components/SettingsView';
 import { settingsOpen } from './components/drafts';
@@ -75,7 +74,6 @@ const App: Component = () => {
                   if (c.type === 'welcome' || c.type.startsWith('wizard_'))
                     return <Onboarding card={c} />;
                   if (c.type === 'intensity_select') return <IntensitySelect mode="daily" />;
-                  if (c.type === 'accountability') return <AccountabilityCard />;
                   if (c.type === 'completion') return <CompletionSummary />;
                   return null;
                 }}

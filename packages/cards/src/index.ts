@@ -5,7 +5,6 @@
 export type {
   Domain,
   IntensityLevel,
-  SwipeDirection,
   ContentCard,
   CardSource,
   CardAction,
@@ -27,8 +26,6 @@ export {
 
 export { dealDailyCards, getCardTask, cardWeight, planDifficulties, INTENSITY_VOLUME_RANGE, dailyVolume, todayString, weekString } from './deck';
 export type { DailyDealOptions } from './deck';
-
-export { shouldTriggerAccountability, countSkips } from './accountability';
 
 export {
   countByDomain,

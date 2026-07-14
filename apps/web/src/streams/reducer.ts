@@ -1,6 +1,5 @@
 import {
   dealDailyCards,
-  shouldTriggerAccountability,
   todayString,
   dailyVolume,
 } from '@doodat/cards';
@@ -103,7 +102,7 @@ export function initialState(profile: UserProfile, today: string = todayString()
     : buildOnboardingDeck();
   return {
     profile,
-    daily: { date: today, outcomes: [], accountabilityShown: false },
+    daily: { date: today, outcomes: [] },
     recentCardIds: [],
     streak: { ...ZERO_STREAK },
     deck,
@@ -128,7 +127,7 @@ export function reduce(state: AppState, intent: Intent): AppState {
       return handleSetIntensity(state, intent.intensity);
 
     case 'SWIPE':
-      return handleSwipe(state, intent.card, intent.direction, intent.actionResponses);
+      return handleSwipe(state, intent.card, intent.actionResponses);
 
     case 'ADVANCE':
       return {
@@ -141,9 +140,6 @@ export function reduce(state: AppState, intent: Intent): AppState {
         ...state,
         currentIndex: Math.max(0, Math.min(intent.index, state.deck.length - 1)),
       };
-
-    case 'DISMISS_ACCOUNTABILITY':
-      return handleDismissAccountability(state);
 
     case 'DAILY_RESET':
       return handleDailyReset(state, intent.date);
@@ -170,7 +166,6 @@ function handleSetIntensity(state: AppState, intensity: AppState['profile']['cur
 function handleSwipe(
   state: AppState,
   card: ContentCard,
-  direction: 'complete' | 'skip',
   actionResponses?: Record<string, string>,
 ): AppState {
   const current = state.deck[state.currentIndex];
@@ -181,7 +176,7 @@ function handleSwipe(
   const outcome: CardOutcome = {
     cardId: card.id,
     domain: card.domain,
-    swipeDirection: direction,
+    swipeDirection: 'complete',
     intensity: state.profile.currentIntensity,
     difficulty: card.difficulty,
     ...(hasResponses ? { actionResponses } : {}),
@@ -203,26 +198,10 @@ function handleSwipe(
   const streak = recomputeStreak(state.streak, outcomes, state.daily.date);
 
   const daily = { ...state.daily, outcomes };
-  let deck = state.deck;
-
-  // Accountability injection (US-005): on the 3rd skip, splice a prompt card.
-  const hasAccCard = deck.some((c) => c.type === 'accountability');
-  if (shouldTriggerAccountability(outcomes, daily.accountabilityShown) && !hasAccCard) {
-    const insertAt = state.currentIndex + 1;
-    const accountabilityCard: DeckCard = { id: 'sys-accountability-' + now, type: 'accountability' };
-    deck = [...deck.slice(0, insertAt), accountabilityCard, ...deck.slice(insertAt)];
-    return { ...state, daily, recentCardIds, streak, deck, currentIndex: insertAt };
-  }
 
   // Navigate to the next unresolved content card (or completion if all done).
-  const nextIndex = nextUnresolvedIndex(deck, outcomes, state.currentIndex + 1);
-  return { ...state, daily, recentCardIds, streak, deck, currentIndex: nextIndex };
-}
-
-function handleDismissAccountability(state: AppState): AppState {
-  const daily = { ...state.daily, accountabilityShown: true };
-  const nextIndex = nextUnresolvedIndex(state.deck, state.daily.outcomes, 0);
-  return { ...state, daily, currentIndex: nextIndex };
+  const nextIndex = nextUnresolvedIndex(state.deck, outcomes, state.currentIndex + 1);
+  return { ...state, daily, recentCardIds, streak, deck: state.deck, currentIndex: nextIndex };
 }
 
 function handleDailyReset(state: AppState, date: string): AppState {
@@ -239,7 +218,7 @@ function handleDailyReset(state: AppState, date: string): AppState {
 
   return {
     ...state,
-    daily: { date, outcomes: [], accountabilityShown: false },
+    daily: { date, outcomes: [] },
     streak: {
       count: dayStartCount,
       lastCompletedDate: dayStartLastCompletedDate,
@@ -254,7 +233,7 @@ function handleDailyReset(state: AppState, date: string): AppState {
 function handleResetDayToWizard(state: AppState): AppState {
   return {
     ...state,
-    daily: { ...state.daily, outcomes: [], accountabilityShown: false },
+    daily: { ...state.daily, outcomes: [] },
     deck: buildOnboardingDeck(),
     currentIndex: 0,
   };
