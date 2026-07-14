@@ -206,16 +206,18 @@ export function dealDailyCards(options: DailyDealOptions): ContentCard[] {
   const rng = mulberry32(dateSeed(date, pubkey));
   const plan = planDifficulties(intensity, volume, rng);
 
+  const domains = shuffle(DOMAIN_ORDER, rng);
+
   const labelsByDomain: Record<Domain, IntensityLevel[]> = {
     physical: [],
     mental: [],
     spiritual: [],
   };
-  plan.forEach((lvl, i) => labelsByDomain[DOMAIN_ORDER[i % 3]].push(lvl));
+  plan.forEach((lvl, i) => labelsByDomain[domains[i % 3]].push(lvl));
 
   const used = new Set<string>();
   const out: ContentCard[] = [];
-  for (const domain of DOMAIN_ORDER) {
+  for (const domain of domains) {
     for (const difficulty of labelsByDomain[domain]) {
       const card = pickOne(DOMAIN_POOL[domain], domain, difficulty, used, recentSet, preferences, rng);
       if (card) {

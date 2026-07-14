@@ -10,11 +10,13 @@ describe('dealDailyCards — structure', () => {
     expect(dealDailyCards(FIXED)).toHaveLength(9);
   });
 
-  it('deals 3 per domain in physical → mental → spiritual order', () => {
+  it('deals 3 per domain (even split)', () => {
     const deck = dealDailyCards(FIXED);
-    expect(deck.slice(0, 3).every((c) => c.domain === 'physical')).toBe(true);
-    expect(deck.slice(3, 6).every((c) => c.domain === 'mental')).toBe(true);
-    expect(deck.slice(6, 9).every((c) => c.domain === 'spiritual')).toBe(true);
+    const counts = { physical: 0, mental: 0, spiritual: 0 };
+    for (const c of deck) counts[c.domain]++;
+    expect(counts.physical).toBe(3);
+    expect(counts.mental).toBe(3);
+    expect(counts.spiritual).toBe(3);
   });
 
   it('never deals the same card twice within one deck', () => {
@@ -48,9 +50,9 @@ describe('dealDailyCards — recent-card de-duplication', () => {
   it('excludes recent ids when enough other cards are available', () => {
     const recent = physicalCards.slice(0, 5).map((c) => c.id); // 5 recent, 25 available
     const deck = dealDailyCards({ ...FIXED, recentCardIds: recent });
-    const dealt = deck.slice(0, 3).map((c) => c.id);
+    const dealtPhysical = deck.filter((c) => c.domain === 'physical').map((c) => c.id);
     for (const id of recent) {
-      expect(dealt, `recent card ${id} should not be dealt`).not.toContain(id);
+      expect(dealtPhysical, `recent card ${id} should not be dealt`).not.toContain(id);
     }
   });
 
@@ -58,7 +60,8 @@ describe('dealDailyCards — recent-card de-duplication', () => {
     // Mark 28 of 30 physical cards recent → only 2 available < 3 needed → fallback
     const recent = physicalCards.slice(0, 28).map((c) => c.id);
     const deck = dealDailyCards({ ...FIXED, recentCardIds: recent });
-    expect(deck.slice(0, 3)).toHaveLength(3); // still deals 3, from full pool
+    const physicalCount = deck.filter((c) => c.domain === 'physical').length;
+    expect(physicalCount).toBe(3); // still deals 3 physical, from full pool
   });
 });
 
@@ -92,11 +95,13 @@ describe('dealDailyCards — volume + domain split', () => {
     expect(dealDailyCards({ ...FIXED, volume: 9, intensity: 'high' })).toHaveLength(9);
   });
 
-  it('splits the volume evenly across domains (6 -> 2/2/2) in phys -> ment -> spir order', () => {
+  it('splits the volume evenly across domains (6 -> 2/2/2)', () => {
     const deck = dealDailyCards({ ...FIXED, volume: 6, intensity: 'medium' });
-    expect(deck.slice(0, 2).every((c) => c.domain === 'physical')).toBe(true);
-    expect(deck.slice(2, 4).every((c) => c.domain === 'mental')).toBe(true);
-    expect(deck.slice(4, 6).every((c) => c.domain === 'spiritual')).toBe(true);
+    const counts = { physical: 0, mental: 0, spiritual: 0 };
+    for (const c of deck) counts[c.domain]++;
+    expect(counts.physical).toBe(2);
+    expect(counts.mental).toBe(2);
+    expect(counts.spiritual).toBe(2);
   });
 
   it('never deals the same card twice within one deck, at every volume', () => {
@@ -104,6 +109,57 @@ describe('dealDailyCards — volume + domain split', () => {
       const ids = dealDailyCards({ ...FIXED, volume: v, intensity: v === 3 ? 'low' : v === 6 ? 'medium' : 'high' }).map((c) => c.id);
       expect(new Set(ids).size, `volume ${v}`).toBe(ids.length);
     }
+  });
+});
+
+describe('dealDailyCards — randomized domain offset', () => {
+  it('volume 7: the domain with 3 cards varies across seeds', () => {
+    const domainsWith3 = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      const deck = dealDailyCards({ ...FIXED, volume: 7, intensity: 'medium', pubkey: `seed-${i}` });
+      const counts = { physical: 0, mental: 0, spiritual: 0 };
+      for (const c of deck) counts[c.domain]++;
+      for (const [domain, count] of Object.entries(counts)) {
+        if (count === 3) domainsWith3.add(domain);
+      }
+    }
+    expect(domainsWith3.size).toBeGreaterThan(1);
+  });
+
+  it('volume 8: the domain with 2 cards varies across seeds', () => {
+    const domainsWith2 = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      const deck = dealDailyCards({ ...FIXED, volume: 8, intensity: 'high', pubkey: `seed-${i}` });
+      const counts = { physical: 0, mental: 0, spiritual: 0 };
+      for (const c of deck) counts[c.domain]++;
+      for (const [domain, count] of Object.entries(counts)) {
+        if (count === 2) domainsWith2.add(domain);
+      }
+    }
+    expect(domainsWith2.size).toBeGreaterThan(1);
+  });
+
+  it('each domain gets at least floor(volume/3) cards', () => {
+    for (const v of [4, 5, 7, 8]) {
+      for (let i = 0; i < 50; i++) {
+        const deck = dealDailyCards({ ...FIXED, volume: v, intensity: 'medium', pubkey: `seed-${i}` });
+        const counts = { physical: 0, mental: 0, spiritual: 0 };
+        for (const c of deck) counts[c.domain]++;
+        const min = Math.floor(v / 3);
+        for (const domain of ['physical', 'mental', 'spiritual'] as const) {
+          expect(counts[domain], `volume=${v} seed=${i} domain=${domain}`).toBeGreaterThanOrEqual(min);
+        }
+      }
+    }
+  });
+
+  it('output order is not always physical → mental → spiritual', () => {
+    let physicalFirst = 0;
+    for (let i = 0; i < 30; i++) {
+      const deck = dealDailyCards({ ...FIXED, volume: 9, intensity: 'high', pubkey: `seed-${i}` });
+      if (deck[0].domain === 'physical') physicalFirst++;
+    }
+    expect(physicalFirst).toBeLessThan(30);
   });
 });
 
