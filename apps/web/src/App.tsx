@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import { createMemo, Show } from 'solid-js';
+import { createMemo, createSignal, Show } from 'solid-js';
 import { Transition } from 'solid-transition-group';
 import { state } from './store';
 import { isContentCard } from './types';
@@ -17,11 +17,6 @@ import { neuOnEnter, neuOnExit } from './neuTransition';
 const App: Component = () => {
   const current = () => state.deck[state.currentIndex];
 
-  const contentCard = createMemo(() => {
-    const c = current();
-    return c && isContentCard(c) ? c : undefined;
-  });
-
   const viewKey = createMemo(() => {
     if (settingsOpen()) return 'settings';
     const c = current();
@@ -30,20 +25,36 @@ const App: Component = () => {
     return c.type;
   });
 
+  const [settledKey, setSettledKey] = createSignal(viewKey());
+
+  const showCardNav = createMemo(() => {
+    const k = settledKey();
+    return k.startsWith('content:') || k === 'settings';
+  });
+
+  const showBottomBar = createMemo(() => {
+    const k = settledKey();
+    return k !== 'loading' && !k.startsWith('content:') && k !== 'settings';
+  });
+
   return (
     <main class="min-h-dvh flex flex-col items-center p-6">
       <Show when={current()} fallback={<p class="text-dodaat-textMuted">Loading…</p>}>
         <div class="w-full max-w-md flex-1 flex flex-col">
-          {/* Top — card navigation (content cards only; stays visible when settings open) */}
-          <Show when={contentCard()}>
-            <div class="pt-2 pb-4">
+          <Show when={showCardNav()}>
+            <div class="pt-2 pb-4 neu-fade-in">
               <CardNav />
             </div>
           </Show>
 
-          {/* Middle — card content or settings (two-phase neumorphic transition) */}
           <div class="flex-1 flex flex-col justify-center py-4">
-            <Transition onEnter={neuOnEnter} onExit={neuOnExit} mode="outin" appear>
+            <Transition
+              onEnter={neuOnEnter}
+              onExit={neuOnExit}
+              onAfterExit={() => setSettledKey(viewKey())}
+              mode="outin"
+              appear
+            >
               <Show when={viewKey()} keyed>
                 {(key) => {
                   if (key === 'settings') return <SettingsView />;
@@ -65,9 +76,8 @@ const App: Component = () => {
             </Transition>
           </div>
 
-          {/* Bottom — action bar (hidden for content cards and settings) */}
-          <Show when={!settingsOpen() && !contentCard()}>
-            <div class="pb-2 pt-4">
+          <Show when={showBottomBar()}>
+            <div class="pb-2 pt-4 neu-fade-in">
               <BottomBar />
             </div>
           </Show>

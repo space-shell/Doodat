@@ -50,4 +50,15 @@
       inset -2px -2px 4px theme('colors.dodaat.shadowLight');
     transform: translateY(1px);
   }
+
+  .neu-fade-in {
+    animation: neu-fade-in 200ms ease-out;
+  }
+  @keyframes neu-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .neu-fade-in { animation: none; }
+  }
 }
