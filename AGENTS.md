@@ -12,7 +12,7 @@
 
 1. **Cards first.** Card authoring, calibration, and the daily-ritual loop are the primary work. Gamification, social, and identity layers come later and must not distract from the card core.
 2. **Physical/digital boundary.** A parallel paper-and-pen version of the system exists IRL. The repo enforces the boundary via a shared source of truth: `packages/cards` holds all card content and dealing logic. The digital app (`apps/web`) and the printable generator (`packages/physical`) both derive from it. One edit to a card updates both surfaces.
-3. **State and UI are separate concerns.** **RxJS owns all state and event flow** (daily reset, weekly reset, the swipe pipeline, streak accumulation, time-based mechanics). **SolidJS owns rendering only** — components read derived signals and emit intents; they hold no business logic and no state beyond local UI ephemera. This separation is the architecture's load-bearing wall. Do not put state management in components.
+3. **State and UI are separate concerns.** **RxJS owns all state and event flow** (daily reset, daily intensity check-in, the swipe pipeline, streak accumulation, time-based mechanics). **SolidJS owns rendering only** — components read derived signals and emit intents; they hold no business logic and no state beyond local UI ephemera. This separation is the architecture's load-bearing wall. Do not put state management in components.
 4. **Neumorphic theme.** Light beige `#F5F0E8` base, gold `#C4A882` accent, soft dual-shadow depth. Full palette in **Theme & Design** below; encoded in `apps/web/tailwind.config.ts`.
 5. **Web first.** Android/native development is paused. The MVP targets the web. A mobile return is a future decision, not an assumption.
 
@@ -41,16 +41,28 @@ Doodat/
 ├── flake.nix                    # Nix devshell: nodejs_22 + pnpm
 ├── tsconfig.base.json
 ├── packages/
-│   ├── cards/                   # @doodat/cards — SHARED source of truth
-│   │   └── src/{data, types, deck, stats}.ts   # 90 cards + domain types + dealing engine + deck stats
-│   └── physical/                # @doodat/physical — printable Markdown generator
+│   └── cards/                   # @doodat/cards — SHARED source of truth
+│       └── src/{data, types, deck, stats, accountability}.ts
+│           # 90 cards (v2 schema: difficulty/sources/actions) + domain types
+│           # + dealing engine (volume-based) + deck stats + accountability trigger
 ├── apps/
 │   └── web/                     # @doodat/web — SolidJS + RxJS + Tailwind
 │       ├── index.html           # daily-ritual app entry
 │       ├── cards.html           # card browser entry (review + stats + notes)
-│       └── src/{components, streams, store}   # + cards.tsx (browser root)
-├── tests/                       # Playwright E2E (root-level, targets apps/web)
+│       └── src/
+│           ├── App.tsx          # view router (viewKey + Transition + keyed Show)
+│           ├── neuTransition.ts # two-phase neumorphic transition callbacks
+│           ├── types.ts         # AppState, Intent, DeckCard, UserProfile
+│           ├── cards.tsx        # card browser root
+│           ├── components/      # ContentCardView, CardNav, BottomBar, Onboarding,
+│           │                    # IntensitySelect, AccountabilityCard, CompletionSummary,
+│           │                    # SettingsView, drafts.ts (ephemeral UI signals)
+│           │   └── browse/      # CardBrowser, CardDetail, CardList, CardNotes,
+│           │                    # CardStats, RadarChart, radarGeometry
+│           ├── streams/         # reducer.ts, stateMachine.ts, time.ts, intents.ts
+│           └── store/           # index.ts (Solid store + localStorage), notes.ts
 ├── docs/                        # DEVELOPMENT_PLAN.md, CARD_DESIGN.md, CARD_BROWSER.md
+│   └── user-stories/            # US-001 through US-014
 └── archive/                     # old dodaat/ tree, reference only
 ```
 
@@ -63,7 +75,7 @@ Doodat/
 | `apps/web/src/store/` | Solid `createStore` bridging streams → signals + localStorage | business logic (delegate to streams) |
 | `apps/web/src/components/` | rendering + intent emission | holding state, importing RxJS directly |
 
-UI subscribes to streams via `@solid-primitives/rxjs`. Components emit intents (swipe, select, confirm) into stream Subjects; they never mutate state directly.
+UI subscribes to streams via direct `subscribe` in the store module. Components emit intents (swipe, select, confirm) into stream Subjects; they never mutate state directly.
 
 ## Tech Stack
 
@@ -71,13 +83,14 @@ UI subscribes to streams via `@solid-primitives/rxjs`. Components emit intents (
 |---|---|
 | UI | SolidJS |
 | State / events | RxJS |
-| State↔UI bridge | `@solid-primitives/rxjs` |
-| Persistence | `@solid-primitives/storage` (localStorage) |
+| State↔UI bridge | direct `subscribe` in store module |
+| Persistence | raw `localStorage` (JSON serialize/deserialize) |
 | Styling | Tailwind CSS v3 (neumorphic) |
+| View transitions | `solid-transition-group` |
 | Build / dev server | Vite |
 | Monorepo | pnpm workspaces |
-| Unit tests | Vitest |
-| E2E tests | Playwright |
+| Unit tests | Vitest (+ `jsdom` for DOM-based tests) |
+| E2E tests | Playwright (planned, not yet implemented) |
 | Dev environment | Nix flake (`nodejs_22`, `pnpm`) |
 
 ## Theme & Design
@@ -128,24 +141,24 @@ export type Flag = keyof typeof FLAGS;
 - Remove the flag (and its conditional) once the feature has been live and stable for a release cycle.
 - Never ship a permanently-`true` flag — that is dead conditional code.
 
-**MVP v1 exemption:** the initial local-only mechanics (onboarding, daily deck, accountability, weekly intensity, streaks, completion) touch no auth, keys, or uploads, so they ship ungated. The flag policy re-activates the moment the social/identity layer returns.
+**MVP v1 exemption:** the initial local-only mechanics (onboarding, daily deck, accountability, daily intensity check-in, streaks, completion, card browser, settings) touch no auth, keys, or uploads, so they ship ungated. The flag policy re-activates the moment the social/identity layer returns.
 
 ## Testing
 
-- **Units:** Vitest, co-located with source (`*.test.ts`). Covers `packages/cards` (dealing logic, weights, recent-card de-duplication, accountability triggers) and `apps/web/src/streams/` (RxJS pipelines: daily reset, weekly reset, swipe pipeline, streak scan).
-- **E2E:** Playwright at repo root (`tests/`), targets the Vite dev server at `http://localhost:5173`. Covers the user journey end-to-end.
+- **Units:** Vitest, co-located with source (`*.test.ts`). Covers `packages/cards` (dealing logic, weights, recent-card de-duplication, accountability triggers, deck stats, v2 schema) and `apps/web/src/streams/` (reducer: daily reset, swipe pipeline, streak scan, RESET_DAY_TO_WIZARD) and `apps/web/src/neuTransition.test.ts` (two-phase transition callbacks) and `apps/web/src/components/browse/radarGeometry.test.ts` (SVG math). DOM-based tests use `jsdom` environment via per-file `// @vitest-environment jsdom` pragma.
+- **E2E:** Playwright at repo root (`tests/`), targets the Vite dev server at `http://localhost:5173`. **Not yet implemented** — planned in Phase 4 of the development plan.
 - **Run units:** `pnpm test`
-- **Run E2E:** `pnpm exec playwright test --project=chromium-desktop`
+- **Run E2E (when implemented):** `pnpm exec playwright test --project=chromium-desktop`
 - Every feature or fix ships with a test that would have caught the regression.
 
 ## CI / CD
 
 | Workflow | Trigger | Output |
 |---|---|---|
-| `test.yml` | push / PR to `main` | Vitest units + Playwright E2E |
 | `deploy-pages.yml` | push to `main` | Vite build → GitHub Pages |
+| `test.yml` | push / PR to `main` | Vitest units + Playwright E2E (planned, not yet created) |
 
-Both must stay green. A red `main` is a P0. The old `build-android.yml` is removed — Android development is paused.
+`deploy-pages.yml` must stay green. A red `main` is a P0. The old `build-android.yml` is removed — Android development is paused.
 
 ## Naming Conventions
 
@@ -164,4 +177,4 @@ Both must stay green. A red `main` is a P0. The old `build-android.yml` is remov
 
 ## Roadmap Snapshot
 
-See [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) for the full phased plan. Current phase: **Phase 0 — repo scaffold** (not yet started). Deferred explicitly: gamification integration, social layer (Nostr / Blossom / gold cards / voice), PDF generation, mobile/native.
+See [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) for the full phased plan. **Phases 0–2 complete** (repo scaffold, `@doodat/cards`, `@doodat/web` daily-ritual app + card browser). Additional features shipped beyond the original plan: card schema v2 (difficulty/sources/actions), volume-based dealing (3/6/9), daily intensity check-in, settings + reset-to-wizard, two-phase neumorphic transitions, free navigation via card number grid. Deferred explicitly: `packages/physical` (printable generator), Playwright E2E, CI test workflow, gamification integration, social layer (Nostr / Blossom / gold cards / voice), PDF generation, mobile/native.

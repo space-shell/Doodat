@@ -10,23 +10,29 @@
 | Monorepo | pnpm workspaces (`packages/*`, `apps/*`) |
 | State/event layer | RxJS (owns all state, events, time mechanics) |
 | UI layer | SolidJS (render only — no business logic in components) |
-| Persistence | `@solid-primitives/storage` (localStorage) |
+| Persistence | raw `localStorage` (JSON serialize/deserialize) |
+| View transitions | `solid-transition-group` (two-phase neumorphic) |
 | Theme | Neumorphic — beige `#F5F0E8`, gold `#C4A882` |
-| Cards | Port the 90 existing validated cards into `packages/cards` |
-| Old code | Delete the `dodaat/` tree + root Expo shims; archive for reference only |
-| Tests | Vitest (units) + Playwright (E2E, re-pointed at Vite dev server) |
+| Cards | 90 cards in `packages/cards` (v2 schema: difficulty/sources/actions) |
+| Tests | Vitest units (+ `jsdom` for DOM-based tests); Playwright E2E (planned) |
 | Dev env | Nix flake (`nodejs_22` + `pnpm`) |
 
 ### MVP mechanics — IN
 
-- Daily deck dealing (9 cards: 3 physical, 3 mental, 3 spiritual)
-- Complete / skip an action (button-driven, no gesture complexity)
-- Persistence across reload + daily reset
-- Onboarding wizard (domain preferences + weekly intensity)
+- Daily deck dealing (3/6/9 cards based on intensity: Light/Medium/High; balanced across physical/mental/spiritual domains)
+- Card schema v2: per-card `difficulty` (low/medium/high), `sources[]` (citations), `actions[]` (text-input prompts, difficulty-scoped)
+- Volume-based dealing with difficulty distribution (low day: weighted random; medium: 1 high guaranteed; high day: 2–3 high guaranteed, seeded)
+- Complete / skip via button (Done/Skip, no swipe gestures)
+- Free navigation via card number grid (CardNav — tap any number to jump)
+- Daily intensity check-in (on day boundary; replaces the former weekly re-commit)
+- Onboarding wizard (welcome → physical prefs → mental prefs → spiritual prefs → intensity; shown on first launch and on settings reset)
 - Accountability card prompt (after 3 skips in a session; once per day)
-- Weekly intensity re-selection (on ISO-week boundary)
-- Streak tracking (consecutive completion days, via RxJS `scan`)
+- Streak tracking (consecutive completion days; recompute from outcomes + day-start snapshot for update-in-place)
 - Daily completion summary
+- Card browser (review all 90 cards, radar chart stats, per-card notes with filter/export/clear)
+- Settings view (reset day to setup wizard — clears today's outcomes, re-triggers full wizard)
+- Two-phase neumorphic transitions (content fades → shadow flattens on exit; shadow raises → content fades in on enter; 200ms per phase, `outin` mode)
+- Persistence across reload + daily reset (raw `localStorage`)
 
 ### MVP mechanics — OUT (deferred)
 
@@ -40,116 +46,107 @@
 
 ### RxJS justification
 
-RxJS earns its weight on the time/event mechanics: `dailyReset$` (midnight tick), `weeklyReset$` (ISO-week boundary), `swipe$` pipeline (persist → accountability trigger → streak update → completion check), `streak$` (`scan` accumulator). If `TIME_OF_DAY_REVEAL` returns, it slots in as another time-gated observable — the natural RxJS fit.
+RxJS earns its weight on the time/event mechanics: `dailyReset$` (midnight tick), the swipe pipeline (persist → accountability trigger → streak update → completion check), streak accumulation (recompute from outcomes + day-start snapshot). The daily intensity check-in is structural (an `intensity_select` card prepended to the deck when `intensitySetAt` doesn't match today), not a separate observable. If `TIME_OF_DAY_REVEAL` returns, it slots in as another time-gated observable — the natural RxJS fit.
 
 ---
 
-## Phase 0 — Repo scaffold & teardown
+## Phase 0 — Repo scaffold & teardown ✅
 
 1. Update `flake.nix` devshell: add `pnpm` alongside `nodejs_22`
 2. Create `pnpm-workspace.yaml` globbing `packages/*` and `apps/*`
 3. Create `tsconfig.base.json` (strict TS, shared path map)
 4. Update `.gitignore`: drop Expo entries; add `node_modules`, `dist`, `.vite`, `coverage`
 5. Delete root `App.tsx`, `index.ts`, `app.json`, `playwright.config.ts`, `assets/`, `dodaat/`, `tests/`, `stories/`, `.expo/`
-6. Move old tree to `archive/` for reference (or delete outright — decided per commit)
+6. Move old tree to `archive/` for reference
 7. Delete `.github/workflows/build-android.yml`
 
-**Done when:** `pnpm install` runs clean at repo root with no packages yet.
+**Done.** `pnpm install` runs clean at repo root.
 
-## Phase 1 — `packages/cards` (shared source of truth)
+## Phase 1 — `packages/cards` (shared source of truth) ✅
 
 Framework-agnostic TypeScript. No Solid, no RxJS, no DOM.
 
 1. Scaffold `packages/cards/package.json` as `@doodat/cards` with `exports` map + `tsc` build
-2. **Test-first (Vitest):** `dealDailyCards()` returns 9 cards, 3 per domain, deterministic for a fixed date+seed
-3. Port `types/index.ts` → `src/types.ts`
-4. Port `data/cards/{physical,mental,spiritual}.ts` → `src/data/` verbatim (90 cards)
-5. **Test-first:** `selectCards()` respects weights and excludes recent IDs within the 63-card / 7-day window
-6. Port `utils/deck.ts` → `src/deck.ts` (`mulberry32`, `dateSeed`, `cardWeight`, `selectCards`, `dealDailyCards`, `getCardTask`)
-7. **Test-first:** accountability trigger fires after exactly 3 total skips (per US-005)
-8. Port accountability logic
-9. Export barrel `src/index.ts`
+2. Port `types/index.ts` → `src/types.ts` (v2 schema: `ContentCard` with `difficulty`, `sources[]`, `actions[]`; `CardSource`, `CardAction`, `CardOutcome`)
+3. Port 90 cards → `src/data/{physical,mental,spiritual}.ts` (migrated via `scripts/migrate-v2.mjs`: difficulty by per-domain tertile of demand score; 24 spiritual cards got sources)
+4. Port dealing logic → `src/deck.ts` (`mulberry32`, `dateSeed`, `cardWeight`, `pickOne`, `planDifficulties`, `dealDailyCards`, `getCardTask`, `INTENSITY_VOLUME`, `todayString`, `weekString`)
+5. Port accountability logic → `src/accountability.ts` (`shouldTriggerAccountability`)
+6. Deck statistics → `src/stats.ts` (`countByDifficulty`, `countByDomain`, radar series)
+7. Export barrel `src/index.ts`
 
-**Done when:** `pnpm --filter @doodat/cards test` is green and the package imports cleanly from a consumer.
+**Done.** 53 unit tests green. Package imports cleanly from `@doodat/web`.
 
-## Phase 2 — `apps/web` (SolidJS MVP)
+## Phase 2 — `apps/web` (SolidJS MVP) ✅
 
-1. Scaffold `apps/web` via `pnpm create vite --template solid-ts`
-2. Install: `solid-js`, `rxjs`, `@solid-primitives/rxjs`, `@solid-primitives/storage`, `tailwindcss@3`, `postcss`, `autoprefixer`, `@doodat/cards@workspace:*`
-3. Configure Tailwind: `tailwind.config.ts` (encode the neumorphic palette as `colors.dodaat.*` + radii + spacing), `postcss.config.js`, `src/index.css` with `@tailwind base/components/utilities`
-4. Add `@layer components` `.neu-raised` / `.neu-inset` utility pair for dual-shadow depth
-5. Configure Vite: `vite.config.ts`, port `5173`, workspace dep resolution
-6. **Test-first (Vitest):** `dailyReset$` emits on date change
-7. Implement `src/streams/dailyReset.ts`
-8. **Test-first:** `weeklyReset$` emits on ISO-week boundary
-9. Implement `src/streams/weeklyReset.ts`
-10. **Test-first:** `swipe$` pipeline persists outcome, triggers accountability after 3 skips, updates streak
-11. Implement `src/streams/swipe.ts` (Subject + pipe)
-12. **Test-first:** `streak$` scan accumulates consecutive completion days, resets on a miss
-13. Implement `src/streams/streak.ts`
-14. **Test-first:** store persists profile, dailyState, deck, currentIndex across reload
-15. Implement `src/store/index.ts` — Solid `createStore` + `@solid-primitives/storage` bridge; expose `window.__dodaatStore` in dev mode
-16. Implement `src/components/CurrentCard.tsx` — single card, Complete/Skip buttons (no gestures)
-17. Implement `src/components/Onboarding.tsx` — 6-step wizard as Solid components
-18. Implement `src/components/AccountabilityCard.tsx`
-19. Implement `src/components/IntensitySelector.tsx` (weekly re-commit)
-20. Implement `src/components/CompletionSummary.tsx`
-21. Wire `src/App.tsx` — compose store + streams + conditional rendering
-22. Implement `src/main.tsx` — root mount, Tailwind import
+1. Scaffold `apps/web` via Vite solid-ts template
+2. Install: `solid-js`, `rxjs`, `tailwindcss@3`, `@doodat/cards@workspace:*`, `solid-transition-group`
+3. Configure Tailwind: neumorphic palette as `colors.dodaat.*` + radii; `@layer components` `.neu-raised` / `.neu-inset` / `.neu-button` / `.neu-fade-in`
+4. Implement `src/streams/` — `reducer.ts` (pure reducer: SET_PREFERENCES, SET_INTENSITY, SWIPE, ADVANCE, NAVIGATE, DISMISS_ACCOUNTABILITY, DAILY_RESET, RESET_DAY_TO_WIZARD), `stateMachine.ts` (merge intent$ + dailyReset$ → scan), `time.ts` (dailyReset$), `intents.ts` (Subject + emit)
+5. Implement `src/store/index.ts` — Solid `createStore` + `reconcile` + raw localStorage; `loadSeed` with first-launch / new-day / same-day resume paths
+6. Implement `src/components/` — ContentCardView (card + sources + actions + Done/Skip), CardNav (flex-wrap number grid + settings button), BottomBar (contextual buttons per card type), Onboarding (5-step wizard), IntensitySelect (Light/Medium/High), AccountabilityCard, CompletionSummary, SettingsView (reset day to wizard)
+7. Implement `src/neuTransition.ts` — two-phase enter/exit callbacks for `<Transition>` (children opacity + box-shadow, `prefers-reduced-motion` guard)
+8. Implement `src/App.tsx` — `viewKey` memo + keyed `<Show>` inside `<Transition mode="outin" appear>`; `settledKey` delays CardNav/BottomBar visibility until exit completes; `isExiting` fades BottomBar with card content
+9. Implement card browser (`cards.html` + `cards.tsx` + `components/browse/`) — CardBrowser, CardList, CardDetail (sources + difficulty badge), CardNotes (filter/export/clear), CardStats, RadarChart (pure SVG)
 
-**Done when:** `pnpm --filter @doodat/web dev` serves at `http://localhost:5173`, the full user journey runs (onboarding → daily deck → completion), and Vitest is green.
+**Done.** 66 unit tests green. Full user journey runs: onboarding → daily intensity check-in → daily deck → completion. Card browser operational.
 
-## Phase 3 — `packages/physical` (printable Markdown generator)
+## Shipped beyond the original plan
+
+These features were not in the phased breakdown but have been implemented:
+
+- **Card schema v2** — `difficulty` (low/medium/high per card), `sources[]` (citations replacing `passage_ref`/`expanded_link`), `actions[]` (text-input prompts, difficulty-scoped). Migration script `packages/cards/scripts/migrate-v2.mjs`.
+- **Volume-based dealing** — intensity selector controls card count (Light=3, Medium=6, High=9) instead of per-card intensity text. Difficulty distribution biased by volume (low: weighted; medium: 1 high guaranteed; high: seeded 2–3 high).
+- **Daily intensity check-in** — replaced the weekly ISO-week re-commit with a daily check-in (`needsDailyIntensity` checks day boundary, not week boundary).
+- **Free navigation** — CardNav number grid allows jumping to any card. Back/forward buttons removed; navigation is via number grid + swipe auto-advance.
+- **Settings + reset-to-wizard** — settings button in CardNav; settings view with "reset day to setup wizard" button (`RESET_DAY_TO_WIZARD` intent clears today's outcomes, re-triggers full 5-card wizard).
+- **Two-phase neumorphic transitions** — `neuTransition.ts` with `onEnter`/`onExit` callbacks: children fade → shadow flattens (exit); shadow raises → children fade in (enter). `settledKey` + `isExiting` synchronize CardNav/BottomBar appearance with the transition cycle.
+- **Card browser** — separate `cards.html` entry; review all 90 cards with detail view, radar chart stats, per-card notes (localStorage, filter/export/clear).
+
+## Phase 3 — `packages/physical` (printable Markdown generator) — not started
 
 PDF is deferred. Markdown only for now.
 
 1. Scaffold `packages/physical/package.json` as `@doodat/physical`, bin entry
 2. **Test-first (Vitest):** generator emits all 90 cards grouped by domain in Markdown
-3. Implement Markdown emitter: imports `@doodat/cards`, outputs `decks.md` with one section per domain, one block per card (title, low/medium/high, context, tags)
+3. Implement Markdown emitter: imports `@doodat/cards`, outputs `decks.md` with one section per domain, one block per card (title, difficulty, task text, context, sources, tags)
 4. Add CLI: `pnpm --filter @doodat/physical gen` writes `decks.md` to repo root
 5. PDF generation tracked as a follow-up issue, not in this plan
 
 **Done when:** `pnpm --filter @doodat/physical gen` produces a printable `decks.md`.
 
-## Phase 4 — Playwright E2E
+## Phase 4 — Playwright E2E — not started
 
 1. New root `playwright.config.ts`:
-   - Drop the `/nix/store/...` Chromium hardcode → Playwright's bundled Chromium
    - `baseURL: http://localhost:5173`
    - `webServer.command: pnpm --filter @doodat/web dev`, `reuseExistingServer: true`
    - Two projects: `chromium-mobile` (390×844), `chromium-desktop`
-2. Rewrite specs for button-driven UI (no swipe-gesture helpers):
-   - `wizard.spec.ts` — 6-step onboarding
-   - `daily-deck.spec.ts` — complete/skip advances index, persists across reload
+2. Specs for button-driven UI (no swipe-gesture helpers):
+   - `wizard.spec.ts` — 5-step onboarding
+   - `daily-deck.spec.ts` — Done/Skip advances, persists across reload
    - `accountability.spec.ts` — 3-skip trigger
-   - `intensity.spec.ts` — weekly re-selection via ISO-week time travel
-   - `completion.spec.ts` — end-of-deck summary renders (fixes the weak null-render assertion from the old suite)
-   - `streak.spec.ts` — new, covers streak increment + reset
+   - `intensity.spec.ts` — daily re-selection
+   - `completion.spec.ts` — end-of-deck summary
+   - `streak.spec.ts` — streak increment + reset
+   - `settings.spec.ts` — reset day to wizard
+   - `transitions.spec.ts` — two-phase neumorphic transitions
 
 **Done when:** `pnpm exec playwright test --project=chromium-desktop` is green locally.
 
-## Phase 5 — CI
+## Phase 5 — CI — partially complete
 
-1. Confirm `.github/workflows/build-android.yml` deleted (Phase 0)
-2. Rewrite `.github/workflows/deploy-pages.yml`:
-   - Node 22 + pnpm setup
-   - `pnpm install --frozen-lockfile`
-   - `pnpm --filter @doodat/web build` (Vite → `apps/web/dist/`)
-   - upload `apps/web/dist/` as the Pages artifact
-3. New `.github/workflows/test.yml`:
-   - Triggers: push to `main`, PR to `main`
-   - `pnpm install --frozen-lockfile`
-   - `pnpm test` (Vitest across all workspaces)
-   - `pnpm exec playwright test` with cached browser binaries
-   - This restores the missing green-test signal flagged in the audit
+1. ✅ `.github/workflows/build-android.yml` deleted (Phase 0)
+2. ✅ `.github/workflows/deploy-pages.yml`: Node 22 + pnpm, `pnpm --filter @doodat/web build`, upload `apps/web/dist/` as Pages artifact
+3. ❌ `.github/workflows/test.yml`: not yet created. Planned: triggers on push/PR to `main`, runs `pnpm test` (Vitest) + Playwright E2E
 
-**Done when:** a push to `main` triggers both workflows and both pass on GitHub Actions.
+**Done when:** both workflows exist and pass on GitHub Actions.
 
 ## Phase 6 — Documentation (ongoing)
 
-- [`AGENTS.md`](../AGENTS.md) — kept current with stack, contracts, policies
-- [`docs/CARD_DESIGN.md`](CARD_DESIGN.md) — card authoring workflow
-- `README.md` — setup, dev, test, build, physical-generator commands
+- [`AGENTS.md`](../AGENTS.md) — kept current with stack, contracts, policies ✅
+- [`docs/CARD_DESIGN.md`](CARD_DESIGN.md) — card authoring workflow (v2 schema) ✅
+- [`docs/CARD_BROWSER.md`](CARD_BROWSER.md) — card browser feature spec ✅
+- [`docs/user-stories/`](user-stories/) — US-001 through US-014 ✅
+- `README.md` — setup, dev, test, build commands (not yet created)
 - Update docs whenever behaviour or architecture changes (part of "done")
 
 ---
