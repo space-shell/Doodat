@@ -26,6 +26,7 @@ const App: Component = () => {
   });
 
   const [settledKey, setSettledKey] = createSignal(viewKey());
+  const [isExiting, setExiting] = createSignal(false);
 
   const showCardNav = createMemo(() => {
     const k = settledKey();
@@ -35,6 +36,12 @@ const App: Component = () => {
   const showBottomBar = createMemo(() => {
     const k = settledKey();
     return k !== 'loading' && !k.startsWith('content:') && k !== 'settings';
+  });
+
+  const settledCardType = createMemo(() => {
+    const k = settledKey();
+    if (k.startsWith('content:') || k === 'settings' || k === 'loading') return undefined;
+    return k;
   });
 
   return (
@@ -50,8 +57,8 @@ const App: Component = () => {
           <div class="flex-1 flex flex-col justify-center py-4">
             <Transition
               onEnter={neuOnEnter}
-              onExit={neuOnExit}
-              onAfterExit={() => setSettledKey(viewKey())}
+              onExit={(el, done) => { setExiting(true); neuOnExit(el, done); }}
+              onAfterExit={() => { setExiting(false); setSettledKey(viewKey()); }}
               mode="outin"
               appear
             >
@@ -77,8 +84,11 @@ const App: Component = () => {
           </div>
 
           <Show when={showBottomBar()}>
-            <div class="pb-2 pt-4 neu-fade-in">
-              <BottomBar />
+            <div
+              class="pb-2 pt-4 neu-fade-in transition-opacity duration-200 ease-out"
+              style={{ opacity: isExiting() ? '0' : '1' }}
+            >
+              <BottomBar cardType={settledCardType()} />
             </div>
           </Show>
         </div>
