@@ -26,7 +26,7 @@ function makeProfile(over: Partial<UserProfile> = {}): UserProfile {
 function makeState(over: Partial<AppState> = {}): AppState {
   const profile = makeProfile();
   const deck = [
-    ...dealDailyCards({ date: DATE, pubkey: profile.localId, volume: 6 }),
+    ...dealDailyCards({ date: DATE, pubkey: profile.localId, intensity: 'medium', volume: 6 }),
     { id: `sys-completion-${DATE}`, type: 'completion' as const },
   ];
   return {
@@ -53,9 +53,6 @@ describe('initialState', () => {
     expect(s.profile.onboardingComplete).toBe(false);
     expect(s.deck.map((c) => c.type)).toEqual([
       'welcome',
-      'wizard_physical',
-      'wizard_mental',
-      'wizard_spiritual',
       'wizard_intensity',
     ]);
     expect(s.currentIndex).toBe(0);
@@ -291,9 +288,13 @@ describe('DAILY_RESET', () => {
     expect(next.daily.outcomes).toEqual([]);
     expect(next.daily.accountabilityShown).toBe(false);
     expect(next.currentIndex).toBe(0);
-    // intensity was set on DATE (prev day) → intensity_select prepended: 1 + 6 content + completion = 8
-    expect(next.deck.length).toBe(8);
+    // intensity was set on DATE (prev day) → intensity_select prepended
+    // volume is randomized (medium: 4-7) → content count varies
     expect(next.deck[0].type).toBe('intensity_select');
+    expect(next.deck[next.deck.length - 1].type).toBe('completion');
+    const contentCount = next.deck.length - 2;
+    expect(contentCount).toBeGreaterThanOrEqual(4);
+    expect(contentCount).toBeLessThanOrEqual(7);
   });
 
   it('prepends an intensity_select card on a new day', () => {
@@ -439,9 +440,6 @@ describe('RESET_DAY_TO_WIZARD', () => {
     expect(next.currentIndex).toBe(0);
     expect(next.deck.map((c) => c.type)).toEqual([
       'welcome',
-      'wizard_physical',
-      'wizard_mental',
-      'wizard_spiritual',
       'wizard_intensity',
     ]);
   });

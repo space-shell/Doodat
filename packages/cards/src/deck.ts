@@ -96,22 +96,24 @@ export function cardWeight(
 
 // ─── Daily volume + difficulty distribution ───────────────────────────────────
 
-/** User-facing intensity (low|medium|high) maps to a per-day card count. */
-export const INTENSITY_VOLUME: Record<IntensityLevel, 3 | 6 | 9> = {
-  low: 3,
-  medium: 6,
-  high: 9,
+/** Per-intensity card-count ranges. dailyVolume picks deterministically within the range. */
+export const INTENSITY_VOLUME_RANGE: Record<IntensityLevel, readonly [number, number]> = {
+  low: [2, 5],
+  medium: [4, 7],
+  high: [6, 9],
 };
 
-/**
- * Per-volume difficulty weights for the non-guaranteed draws. Tunable. Higher
- * volumes skew toward harder cards. See planDifficulties for how guarantees
- * combine with these (low: none; medium: 1 high; high: seeded 2-or-3 high).
- */
-const DIFFICULTY_WEIGHTS: Record<3 | 6 | 9, Record<IntensityLevel, number>> = {
-  3: { low: 0.62, medium: 0.33, high: 0.05 },
-  6: { low: 0.30, medium: 0.55, high: 0.15 },
-  9: { low: 0.30, medium: 0.45, high: 0.25 },
+/** Deterministic daily volume within the intensity range (seeded by date + pubkey). */
+export function dailyVolume(intensity: IntensityLevel, date: string, pubkey: string): number {
+  const [min, max] = INTENSITY_VOLUME_RANGE[intensity];
+  const rng = mulberry32(dateSeed(date, pubkey));
+  return min + Math.floor(rng() * (max - min + 1));
+}
+
+const DIFFICULTY_WEIGHTS: Record<IntensityLevel, Record<IntensityLevel, number>> = {
+  low: { low: 0.62, medium: 0.33, high: 0.05 },
+  medium: { low: 0.30, medium: 0.55, high: 0.15 },
+  high: { low: 0.30, medium: 0.45, high: 0.25 },
 };
 
 const DOMAIN_ORDER: Domain[] = ['physical', 'mental', 'spiritual'];
@@ -145,11 +147,11 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
  * shuffled so guarantees scatter across the three domains. Exported so the
  * distribution policy is unit-testable in isolation.
  */
-export function planDifficulties(volume: 3 | 6 | 9, rng: () => number): IntensityLevel[] {
-  const guaranteedHigh = volume === 3 ? 0 : volume === 6 ? 1 : 2 + (rng() < 0.5 ? 0 : 1);
+export function planDifficulties(intensity: IntensityLevel, volume: number, rng: () => number): IntensityLevel[] {
+  const guaranteedHigh = intensity === 'low' ? 0 : intensity === 'medium' ? 1 : 2 + (rng() < 0.5 ? 0 : 1);
   const plan: IntensityLevel[] = [];
   for (let i = 0; i < guaranteedHigh; i++) plan.push('high');
-  const weights = DIFFICULTY_WEIGHTS[volume];
+  const weights = DIFFICULTY_WEIGHTS[intensity];
   while (plan.length < volume) plan.push(weightedDifficulty(weights, rng));
   return shuffle(plan, rng);
 }
@@ -187,9 +189,10 @@ function pickOne(
 export interface DailyDealOptions {
   date: string;
   pubkey: string;
-  volume: 3 | 6 | 9;
+  intensity: IntensityLevel;
+  volume: number;
   preferences?: UserPreferences;
-  recentCardIds?: string[]; // ids dealt in the last ~7 days (kept to 63 = 7 × 9)
+  recentCardIds?: string[];
 }
 
 /**
@@ -198,10 +201,10 @@ export interface DailyDealOptions {
  * planDifficulties. Deterministic for a given date + pubkey + volume.
  */
 export function dealDailyCards(options: DailyDealOptions): ContentCard[] {
-  const { date, pubkey, volume, preferences, recentCardIds = [] } = options;
+  const { date, pubkey, intensity, volume, preferences, recentCardIds = [] } = options;
   const recentSet = new Set(recentCardIds);
   const rng = mulberry32(dateSeed(date, pubkey));
-  const plan = planDifficulties(volume, rng);
+  const plan = planDifficulties(intensity, volume, rng);
 
   const labelsByDomain: Record<Domain, IntensityLevel[]> = {
     physical: [],

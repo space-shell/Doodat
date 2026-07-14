@@ -2,7 +2,7 @@ import {
   dealDailyCards,
   shouldTriggerAccountability,
   todayString,
-  INTENSITY_VOLUME,
+  dailyVolume,
 } from '@doodat/cards';
 import type { CardOutcome, ContentCard } from '@doodat/cards';
 import type { AppState, Intent, UserProfile, StreakState, DeckCard } from '../types';
@@ -23,9 +23,6 @@ export function dayBefore(dateStr: string): string {
 function buildOnboardingDeck(): DeckCard[] {
   return [
     { id: 'sys-welcome', type: 'welcome' },
-    { id: 'sys-wizard-physical', type: 'wizard_physical' },
-    { id: 'sys-wizard-mental', type: 'wizard_mental' },
-    { id: 'sys-wizard-spiritual', type: 'wizard_spiritual' },
     { id: 'sys-wizard-intensity', type: 'wizard_intensity' },
   ];
 }
@@ -37,10 +34,12 @@ function needsDailyIntensity(profile: UserProfile, today: string): boolean {
 }
 
 export function buildDailyDeck(profile: UserProfile, today: string, recentCardIds: string[]): DeckCard[] {
+  const volume = dailyVolume(profile.currentIntensity, today, profile.localId);
   const content = dealDailyCards({
     date: today,
     pubkey: profile.localId,
-    volume: INTENSITY_VOLUME[profile.currentIntensity],
+    intensity: profile.currentIntensity,
+    volume,
     preferences: profile.preferences,
     recentCardIds,
   });

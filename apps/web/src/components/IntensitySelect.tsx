@@ -4,12 +4,10 @@ import type { IntensityLevel } from '@doodat/cards';
 import { intensity, setIntensity } from './drafts';
 
 const OPTIONS: { level: IntensityLevel; label: string; desc: string }[] = [
-  { level: 'low', label: 'Light', desc: '3 cards — a quick daily pass' },
-  { level: 'medium', label: 'Medium', desc: '6 cards — a balanced practice' },
-  { level: 'high', label: 'High', desc: '9 cards — a full daily ritual' },
+  { level: 'low', label: 'Light', desc: 'A quick daily pass' },
+  { level: 'medium', label: 'Medium', desc: 'A balanced practice' },
+  { level: 'high', label: 'High', desc: 'A full daily ritual' },
 ];
-
-const COUNT: Record<IntensityLevel, number> = { low: 3, medium: 6, high: 9 };
 
 const IntensitySelect: Component<{ mode: 'onboarding' | 'daily' }> = (props) => {
   return (
@@ -29,10 +27,7 @@ const IntensitySelect: Component<{ mode: 'onboarding' | 'daily' }> = (props) => 
               class={`w-full text-left p-4 rounded-button transition ${intensity() === opt.level ? 'neu-inset ring-2 ring-dodaat-gold' : 'neu-button'}`}
               onClick={() => setIntensity(opt.level)}
             >
-              <div class="flex items-center justify-between">
-                <span class="font-semibold text-dodaat-textPrimary">{opt.label}</span>
-                <span class="text-xs font-bold uppercase tracking-wide text-dodaat-gold">{COUNT[opt.level]} cards</span>
-              </div>
+              <span class="block font-semibold text-dodaat-textPrimary">{opt.label}</span>
               <div class="text-xs text-dodaat-textMuted mt-1">{opt.desc}</div>
             </button>
           )}
