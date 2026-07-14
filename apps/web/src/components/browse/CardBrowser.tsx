@@ -58,7 +58,7 @@ const CardBrowser: Component = () => {
   };
 
   // Two-stage clear confirmation: arming turns the button red ("Confirm…"),
-  // a second click deletes. Click-away (via the backdrop) or Escape cancels.
+  // a second click on the button deletes. Click-away or Escape cancels.
   const [armed, setArmed] = createSignal(false);
   const arm = () => noteCount() > 0 && setArmed(true);
   const disarm = () => setArmed(false);
@@ -71,7 +71,11 @@ const CardBrowser: Component = () => {
   onCleanup(() => window.removeEventListener('keydown', onKey));
 
   return (
-    <main class="min-h-screen p-6">
+    <>
+      {armed() && (
+        <div class="fixed inset-0 z-30" onClick={disarm} aria-hidden="true" />
+      )}
+      <main class="min-h-screen p-6">
       <div class="max-w-3xl mx-auto space-y-8">
         <header>
           <a
@@ -82,7 +86,7 @@ const CardBrowser: Component = () => {
           </a>
           <div class="mt-2 flex items-center justify-between gap-3 flex-wrap">
             <h1 class="text-2xl font-bold text-dodaat-textPrimary">Card browser</h1>
-            <div class="flex gap-2 relative z-50">
+            <div class="flex gap-2 relative z-40">
               <button
                 data-testid="export-notes"
                 class="neu-button rounded-button px-3 py-2 text-xs font-semibold text-dodaat-textSecondary"
@@ -103,14 +107,6 @@ const CardBrowser: Component = () => {
               >
                 {armed() ? 'Confirm delete all notes' : 'Clear all'}
               </button>
-              {/* Click-away backdrop — visible only while armed */}
-              <Show when={armed()}>
-                <div
-                  class="fixed inset-0 z-40"
-                  onClick={disarm}
-                  aria-hidden="true"
-                />
-              </Show>
             </div>
           </div>
           <p class="text-sm text-dodaat-textSecondary">
@@ -181,8 +177,9 @@ const CardBrowser: Component = () => {
             <CardDetail card={selected()!} />
           </Show>
         </div>
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   );
 };
 
