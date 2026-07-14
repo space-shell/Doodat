@@ -20,32 +20,41 @@ Card IDs are zero-padded to 3 digits, prefixed by domain: `phys-###`, `ment-###`
 Every card is a `ContentCard`:
 
 ```ts
+type IntensityLevel = 'low' | 'medium' | 'high';
+
 interface ContentCard {
   id: string;                  // 'phys-001' — stable, zero-padded
   type: 'content';
   domain: 'physical' | 'mental' | 'spiritual';
   category: string;            // sub-category, e.g. 'upper_body', 'reflection'
+  difficulty: IntensityLevel;  // intrinsic: selects which intensity_* text renders + drives dealing
   intensity_low: string;       // actionable instruction at low intensity
   intensity_medium: string;    // actionable instruction at medium intensity
   intensity_high: string;      // actionable instruction at high intensity
   context?: string;            // the "why" — italic in UI, optional
   tags: string[];              // lowercase, used for filtering and weighting
   created_at: number;          // unix seconds
+  sources?: CardSource[];      // citations / references backing the card (esp. religious text)
+  actions?: CardAction[];      // inputs the card collects (e.g. a journal text field)
 
   // Spiritual-only fields:
   tradition?: string;          // 'Christianity', 'Stoicism', 'Buddhism', …
-  passage_ref?: string;        // citation, e.g. 'Philippians 4:6-7'
   agnostic_interpretation?: string;  // secular framing of the same insight
   cross_tradition_pair?: string;     // id of a paired card from another tradition
-  expanded_link?: string;      // optional external URL for deeper reading
 }
+
+interface CardSource { citation: string; url?: string; kind?: 'scripture' | 'book' | 'article' | 'paper' | 'web' }
+interface CardAction { id: string; type: 'text' | 'checklist' | 'scale' | 'timer' | 'none'; prompt?: string; required?: boolean; difficulties?: IntensityLevel[]; /* + type-specific fields */ }
 ```
 
 ### What each field is for
 
-- **`intensity_*`** — the action the user takes, written as an imperative starting with a verb. This is the only text that changes between intensities. Keep it concrete: reps, durations, specific objects.
+- **`difficulty`** — the card's intrinsic level. It picks which of the three `intensity_*` texts renders, and it drives the daily dealing distribution (see *Intensity vs difficulty vs volume* below). One card = one difficulty; the same practice never shows at different levels across days.
+- **`intensity_*`** — the action the user takes at each dose, written as an imperative starting with a verb. All three are authored and calibrated (see below); only the one matching `difficulty` is shown. Written as a palette so a card can be re-pinned to a different difficulty without re-authoring.
 - **`context`** — one sentence explaining *why* this practice matters. Not the instructions; the rationale. Shown in muted italic beneath the action.
 - **`tags`** — drive preference weighting and de-duplication. Reuse existing tags; don't invent synonyms (`upper_body`, not `upperbody` or `upper-body`).
+- **`sources`** — citations for any material the card references (scripture, books, papers, articles). Every claim or quotation must be sourced; `url` makes it a link in the UI. Replaces the old `passage_ref` / `expanded_link`.
+- **`actions`** — optional inputs the card collects (v1 renders `type: 'text'` only; other types are schema/plumbing). Use `difficulties` to scope an action to specific card difficulties; omit it for all difficulties.
 - **`agnostic_interpretation`** (spiritual only) — the same insight rendered without the religious frame. Every spiritual card must work for both a tradition-rooted user and a secular one.
 
 ## The three domains
@@ -80,6 +89,20 @@ high:   'Complete 5 sets of 20 push-ups with a 30-second plank between each set.
 
 Time scales (seconds → minutes), reps scale (10 → 45 → 100+), and a new element enters at high (the plank). All three are unmistakably the *same practice* at different doses.
 
+## Intensity vs difficulty vs volume
+
+These three words are easy to conflate. They mean different things:
+
+| Term | What it is | Where it lives |
+|---|---|---|
+| **`intensity_*` texts** | Three authored doses of one practice (the calibration table above). | on each card |
+| **`difficulty`** | A card's *intrinsic* level (`low` / `medium` / `high`). Picks which `intensity_*` text renders and weights the daily deal. One per card, fixed. | on each card |
+| **daily volume** | How many cards the user draws per day. The user-facing "intensity" selector: **Light = 3, Medium = 6, High = 9**. | on the profile (`currentIntensity`), mapped via `INTENSITY_VOLUME` |
+
+The dealing engine (`packages/cards/src/deck.ts`) splits the day's volume evenly across the three domains, then draws each slot's difficulty from `planDifficulties`. Difficulty is biased by volume — a High (9-card) day guarantees 2–3 high-difficulty cards; a Medium (6-card) day guarantees 1; a Light (3-card) day guarantees none but high cards remain rare-but-possible.
+
+**Authoring implication:** because `difficulty` selects which text shows, only one of the three `intensity_*` texts renders for a given card. Author all three anyway (the palette is retained) — but make sure the text at the card's pinned `difficulty` is the one you want users to see.
+
 ## Authoring process
 
 1. **Pick the domain and sub-category.** Check the existing distribution in that file — favour under-represented sub-categories.
@@ -87,7 +110,7 @@ Time scales (seconds → minutes), reps scale (10 → 45 → 100+), and a new el
 3. **Write the three intensities.** Apply the calibration table above. Read them aloud in sequence — each should feel like a clear step up.
 4. **Write the context.** One sentence on why this matters. No filler.
 5. **Add tags.** Reuse existing tags where possible. 2–5 tags is the right range.
-6. **If spiritual:** choose the tradition, cite the passage (`passage_ref`), write the `agnostic_interpretation`. Consider a `cross_tradition_pair` if a parallel exists in another tradition.
+6. **If spiritual:** choose the tradition, cite the passage under `sources` (`{ citation, url?, kind? }`), write the `agnostic_interpretation`. Consider a `cross_tradition_pair` if a parallel exists in another tradition.
 7. **Validate** (see below).
 8. **Regenerate the physical deck** — `pnpm --filter @doodat/physical gen` — so the printable Markdown picks up the change.
 
@@ -96,10 +119,10 @@ Time scales (seconds → minutes), reps scale (10 → 45 → 100+), and a new el
 Spiritual cards are the most editorially sensitive part of the deck. Rules:
 
 - **Every spiritual card has an `agnostic_interpretation`.** No exceptions. The card must land for a user who does not share the tradition.
-- **Cite the source honestly.** `passage_ref` must point to a real passage. Do not paraphrase as if quoting.
+- **Cite the source honestly.** Every spiritual card that references a text carries a `sources` entry; `citation` must point to a real passage. Do not paraphrase as if quoting. Give a `url` where the reader can verify it.
 - **Cross-tradition pairs are optional but encouraged.** If two traditions teach the same insight (e.g. Christian "do not be anxious" ↔ Buddhist mindfulness of anxiety), link them via `cross_tradition_pair` referencing the paired card's ID. The pair must be mutual (both cards reference each other).
 - **Respect, don't syncretise.** Present each tradition on its own terms in the intensity text; the `agnostic_interpretation` is where the shared human insight is drawn out — not where the traditions are blurred together.
-- **Agnostic cards stand alone.** Cards with `tradition: 'agnostic'` have no `passage_ref`; their `context` carries the weight.
+- **Agnostic cards stand alone.** Cards with `tradition: 'agnostic'` carry no `sources`; their `context` carries the weight.
 
 ## Validation
 
@@ -114,12 +137,14 @@ The review checklist (manual, before commit):
 
 - [ ] The practice is one thing, not two.
 - [ ] All three intensities are the same practice at different doses.
+- [ ] `difficulty` is set and the text at that level is the one users should see.
 - [ ] `low` is achievable by a beginner with no prep.
 - [ ] `high` is genuinely demanding.
 - [ ] `context` explains *why*, not *how*.
 - [ ] Tags reuse existing vocabulary.
+- [ ] Any claim, quotation, or referenced material has a `sources` entry (with `url` where possible).
 - [ ] (Spiritual) `agnostic_interpretation` present and honest.
-- [ ] (Spiritual) `passage_ref` is a real citation.
+- [ ] (Spiritual) `sources[0].citation` is a real citation.
 
 ## Editing existing cards
 

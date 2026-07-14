@@ -43,11 +43,11 @@ apps/web/
 - **Reviewer notes** are a small Solid store (`apps/web/src/store/notes.ts`) backed by `localStorage['dodaat_card_notes']`. Kept separate from the RxJS ritual state machine — notes are tangential CRUD with no time-based/event-flow semantics.
 - **No new dependencies.** The radar chart is hand-rolled SVG.
 
-## Intensity statistic — caveat
+## Difficulty statistic
 
-Every `ContentCard` carries all three intensity texts (`intensity_low` / `_medium` / `_high`). So "cards per intensity level" is structurally always equal to the total card count (today: 90/90/90). Adding more cards keeps the 1:1:1 ratio. The browser shows this truthfully.
+`countByIntensity` counts each card's intrinsic `difficulty` (`low` / `medium` / `high`) — the field that selects which `intensity_*` text renders and drives the daily deal. The deck is balanced 10/10/10 per domain, so the radar shows a real 30/30/30 spread today; adding or re-pinning cards shifts it truthfully.
 
-A *real* intensity spread would require a new schema field (e.g. a per-card `difficulty` rating distinct from the three authored texts). That is a future card-design decision, not a browser feature.
+The three `intensity_*` texts are still authored per card as a palette, but only the one matching `difficulty` ever renders.
 
 ## Vite multi-entry
 
