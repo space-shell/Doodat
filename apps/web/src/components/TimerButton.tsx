@@ -148,7 +148,7 @@ const TimerButton: Component<{ durationSec: number }> = (props) => {
   return (
     <button
       data-testid="timer-button"
-      class="relative w-20 h-20 neu-inset flex items-center justify-center select-none touch-none"
+      class="relative w-20 h-20 neu-button flex items-center justify-center select-none touch-none"
       style={{ "border-radius": "12px" }}
       aria-label={`Timer — ${display()}`}
       onPointerDown={onPointerDown}
@@ -174,7 +174,7 @@ const TimerButton: Component<{ durationSec: number }> = (props) => {
           stroke-linecap="round"
         />
       </svg>
-      <span class="relative z-10 text-sm font-semibold text-dodaat-textPrimary">
+      <span class="relative z-10 text-sm text-dodaat-textPrimary">
         {display()}
       </span>
     </button>

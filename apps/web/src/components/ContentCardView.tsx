@@ -52,7 +52,7 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
         </span>
       </header>
 
-      <p class="text-base leading-relaxed text-dodaat-textPrimary">{task()}</p>
+      <p class="text-base leading-relaxed text-dodaat-textPrimary font-serif">{task()}</p>
 
       <Show when={props.card.context}>
         <p class="mt-4 text-sm italic leading-relaxed text-dodaat-textMuted">{props.card.context}</p>
@@ -103,9 +103,9 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
         </div>
       </Show>
 
-      <div class="mt-auto pt-8">
+      <div class="mt-auto">
         <Show when={timerAction()?.durationSec}>
-          <div class="flex justify-center pb-4">
+          <div class="flex justify-center py-6">
             <TimerButton durationSec={timerAction()!.durationSec!} />
           </div>
         </Show>
