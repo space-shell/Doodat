@@ -51,6 +51,7 @@ export interface CardAction {
   options?: string[];          // 'checklist' choices
   scaleMin?: number;           // 'scale' lower bound
   scaleMax?: number;           // 'scale' upper bound
+  durationSec?: number;        // 'timer' — countdown duration in seconds
 }
 
 export type ActionType = 'text' | 'checklist' | 'scale' | 'timer' | 'none';

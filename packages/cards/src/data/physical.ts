@@ -25,7 +25,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Perform a 20-minute upper body mobility flow including shoulder circles, chest openers, and thoracic rotation.',
     context: 'Shoulder mobility protects the joint and improves posture.',
     tags: ['upper_body', 'mobility', 'stretching'],
-    created_at: 1700000001
+    created_at: 1700000001,
+    actions: [
+      { id: 'phys-002:timer', type: 'timer', difficulties: ['low'], durationSec: 30 },
+      { id: 'phys-002:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'phys-002:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ]
   },
   {
     id: 'phys-003',
@@ -51,7 +56,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Perform a 3-minute plank challenge: 60 sec forearm, 60 sec side (each side), 30 sec reverse.',
     context: 'Planks build core stability essential for all movement.',
     tags: ['upper_body', 'core', 'stability'],
-    created_at: 1700000003
+    created_at: 1700000003,
+    actions: [
+      { id: 'phys-004:timer', type: 'timer', difficulties: ['low'], durationSec: 20 },
+      { id: 'phys-004:timer', type: 'timer', difficulties: ['medium'], durationSec: 60 },
+      { id: 'phys-004:timer', type: 'timer', difficulties: ['high'], durationSec: 180 },
+    ]
   },
   {
     id: 'phys-005',
@@ -90,7 +100,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Complete a 20-minute lower body mobility flow: hamstrings, hips, quads, calves.',
     context: 'Hamstring flexibility reduces lower back pain and improves movement quality.',
     tags: ['lower_body', 'flexibility', 'hamstrings'],
-    created_at: 1700000006
+    created_at: 1700000006,
+    actions: [
+      { id: 'phys-007:timer', type: 'timer', difficulties: ['low'], durationSec: 60 },
+      { id: 'phys-007:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'phys-007:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ]
   },
   {
     id: 'phys-008',
@@ -116,7 +131,11 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Complete 3 sets of single-leg Romanian deadlifts (10 reps per leg) with controlled descent.',
     context: 'Single-leg work builds ankle stability and prevents injury.',
     tags: ['lower_body', 'balance', 'stability'],
-    created_at: 1700000008
+    created_at: 1700000008,
+    actions: [
+      { id: 'phys-009:timer', type: 'timer', difficulties: ['low'], durationSec: 30 },
+      { id: 'phys-009:timer', type: 'timer', difficulties: ['medium'], durationSec: 45 },
+    ]
   },
   {
     id: 'phys-010',
@@ -155,7 +174,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Complete a 30-minute full-body mobility and strength flow.',
     context: 'Daily movement practices compound over time into lasting physical resilience.',
     tags: ['full_body', 'mobility', 'yoga'],
-    created_at: 1700000011
+    created_at: 1700000011,
+    actions: [
+      { id: 'phys-012:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'phys-012:timer', type: 'timer', difficulties: ['medium'], durationSec: 900 },
+      { id: 'phys-012:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
   {
     id: 'phys-013',
@@ -168,7 +192,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Walk or run for 40 minutes, alternating between brisk walking and jogging intervals.',
     context: 'Walking is one of the most underrated forms of exercise. Consistency beats intensity.',
     tags: ['full_body', 'cardio', 'walking'],
-    created_at: 1700000012
+    created_at: 1700000012,
+    actions: [
+      { id: 'phys-013:timer', type: 'timer', difficulties: ['low'], durationSec: 600 },
+      { id: 'phys-013:timer', type: 'timer', difficulties: ['medium'], durationSec: 1200 },
+      { id: 'phys-013:timer', type: 'timer', difficulties: ['high'], durationSec: 2400 },
+    ]
   },
   {
     id: 'phys-014',
@@ -207,7 +236,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Complete a 30-minute deep flexibility session targeting hips, spine, and hamstrings.',
     context: 'Hip flexibility affects the quality of almost every physical movement you make.',
     tags: ['flexibility', 'hips', 'mobility'],
-    created_at: 1700000015
+    created_at: 1700000015,
+    actions: [
+      { id: 'phys-016:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'phys-016:timer', type: 'timer', difficulties: ['medium'], durationSec: 900 },
+      { id: 'phys-016:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
   {
     id: 'phys-017',
@@ -220,7 +254,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Complete a 25-minute thoracic mobility session including foam rolling and active rotation.',
     context: 'Spinal health underpins everything from posture to energy levels.',
     tags: ['flexibility', 'spine', 'decompression'],
-    created_at: 1700000016
+    created_at: 1700000016,
+    actions: [
+      { id: 'phys-017:timer', type: 'timer', difficulties: ['low'], durationSec: 60 },
+      { id: 'phys-017:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'phys-017:timer', type: 'timer', difficulties: ['high'], durationSec: 1500 },
+    ]
   },
   {
     id: 'phys-018',
@@ -233,7 +272,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Complete a deep lunge flow: low lunge, crescent, lizard, split progression for 30 minutes.',
     context: 'Tight hip flexors from sitting contribute to lower back pain and poor posture.',
     tags: ['flexibility', 'quads', 'hip_flexors'],
-    created_at: 1700000017
+    created_at: 1700000017,
+    actions: [
+      { id: 'phys-018:timer', type: 'timer', difficulties: ['low'], durationSec: 30 },
+      { id: 'phys-018:timer', type: 'timer', difficulties: ['medium'], durationSec: 720 },
+      { id: 'phys-018:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
   {
     id: 'phys-019',
@@ -246,7 +290,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Perform a 30-minute HIIT session: 40 seconds on, 20 seconds rest, for 10 rounds.',
     context: 'Cardiovascular fitness improves every system in your body, including brain function.',
     tags: ['cardio', 'hiit', 'endurance'],
-    created_at: 1700000018
+    created_at: 1700000018,
+    actions: [
+      { id: 'phys-019:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'phys-019:timer', type: 'timer', difficulties: ['medium'], durationSec: 1200 },
+      { id: 'phys-019:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
   {
     id: 'phys-020',
@@ -259,7 +308,11 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Complete a 20-minute Wim Hof breathing session followed by a 2-minute cold exposure (shower).',
     context: 'Deliberate breathing is one of the most accessible tools for influencing your physiology.',
     tags: ['cardio', 'breathwork', 'recovery'],
-    created_at: 1700000019
+    created_at: 1700000019,
+    actions: [
+      { id: 'phys-020:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'phys-020:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ]
   },
   {
     id: 'phys-021',
@@ -272,7 +325,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Perform a 25-minute seated meditation session, returning to the breath each time the mind wanders.',
     context: 'Physical stillness is a trainable skill that benefits the nervous system as much as movement.',
     tags: ['meditation', 'breathwork', 'stillness'],
-    created_at: 1700000020
+    created_at: 1700000020,
+    actions: [
+      { id: 'phys-021:timer', type: 'timer', difficulties: ['low'], durationSec: 180 },
+      { id: 'phys-021:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'phys-021:timer', type: 'timer', difficulties: ['high'], durationSec: 1500 },
+    ]
   },
   {
     id: 'phys-022',
@@ -285,7 +343,12 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Complete a 30-minute yoga nidra or NSDR session, remaining fully still throughout.',
     context: 'NSDR accelerates neurological recovery and can replicate the benefits of sleep.',
     tags: ['meditation', 'recovery', 'rest'],
-    created_at: 1700000021
+    created_at: 1700000021,
+    actions: [
+      { id: 'phys-022:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'phys-022:timer', type: 'timer', difficulties: ['medium'], durationSec: 900 },
+      { id: 'phys-022:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
   {
     id: 'phys-023',
@@ -389,6 +452,11 @@ export const physicalCards: ContentCard[] = [
     intensity_high: 'Spend 30 minutes outdoors in direct morning light, ideally while moving.',
     context: 'Morning light exposure sets your circadian clock, improving sleep quality and alertness.',
     tags: ['cardio', 'circadian', 'light', 'walking'],
-    created_at: 1700000029
+    created_at: 1700000029,
+    actions: [
+      { id: 'phys-030:timer', type: 'timer', difficulties: ['low'], durationSec: 600 },
+      { id: 'phys-030:timer', type: 'timer', difficulties: ['medium'], durationSec: 1200 },
+      { id: 'phys-030:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
 ];

@@ -2,6 +2,8 @@ import type { Component } from 'solid-js';
 import { Show, For, createSignal } from 'solid-js';
 import { getCardTask, type CardAction, type ContentCard as Card } from '@doodat/cards';
 import { emit } from '../streams/intents';
+import { haptic } from '../utils/haptics';
+import TimerButton from './TimerButton';
 
 const DOMAIN_LABEL = { physical: 'Physical', mental: 'Mental', spiritual: 'Spiritual' } as const;
 const DOMAIN_DOT = {
@@ -13,15 +15,23 @@ const DOMAIN_DOT = {
 const ContentCardView: Component<{ card: Card }> = (props) => {
   const task = () => getCardTask(props.card);
   const [responses, setResponses] = createSignal<Record<string, string>>({});
+  const [completed, setCompleted] = createSignal(false);
 
-  // v1 renders only text actions; non-text types are schema/plumbing only.
   // An action activates when its `difficulties` is unset or includes the card's own difficulty.
   const textActions = (): CardAction[] =>
     (props.card.actions ?? []).filter(
       (a) => a.type === 'text' && (!a.difficulties || a.difficulties.includes(props.card.difficulty)),
     );
 
+  const timerAction = (): CardAction | undefined =>
+    (props.card.actions ?? []).find(
+      (a) => a.type === 'timer' && (!a.difficulties || a.difficulties.includes(props.card.difficulty)),
+    );
+
   const commit = () => {
+    if (completed()) return;
+    setCompleted(true);
+    haptic(15);
     const r = responses();
     emit({
       type: 'SWIPE',
@@ -94,9 +104,16 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
       </Show>
 
       <div class="mt-auto pt-8">
+        <Show when={timerAction()?.durationSec}>
+          <div class="flex justify-center pb-4">
+            <TimerButton durationSec={timerAction()!.durationSec!} />
+          </div>
+        </Show>
         <button
           data-testid="complete-btn"
-          class="neu-button w-full py-3 text-sm font-semibold text-dodaat-goldDark"
+          class="neu-button w-full py-3 text-sm font-semibold text-dodaat-goldDark transition-opacity"
+          classList={{ 'opacity-40 pointer-events-none': completed() }}
+          disabled={completed()}
           onClick={() => commit()}
         >
           Done

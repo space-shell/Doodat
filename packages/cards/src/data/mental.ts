@@ -12,7 +12,11 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Read for 45 minutes. Write a brief summary of key ideas in your own words.',
     context: 'Reading is the most reliable method of downloading the distilled experience of others.',
     tags: ['reading', 'non_fiction', 'learning'],
-    created_at: 1700100000
+    created_at: 1700100000,
+    actions: [
+      { id: 'ment-001:timer', type: 'timer', difficulties: ['medium'], durationSec: 1200 },
+      { id: 'ment-001:timer', type: 'timer', difficulties: ['high'], durationSec: 2700 },
+    ]
   },
   {
     id: 'ment-002',
@@ -25,7 +29,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Read for 40 minutes from a philosophical text and write a one-page response.',
     context: 'Philosophy teaches us to think carefully — a skill that pays dividends in every area of life.',
     tags: ['reading', 'philosophy', 'critical_thinking'],
-    created_at: 1700100001
+    created_at: 1700100001,
+    actions: [
+      { id: 'ment-002:timer', type: 'timer', difficulties: ['high'], durationSec: 2400 },
+    ]
   },
   {
     id: 'ment-003',
@@ -38,7 +45,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: "Read a full chapter of a biography and reflect on what the subject's life teaches about resilience.",
     context: 'Biographies are compressed life lessons from people who shaped history.',
     tags: ['reading', 'biography', 'resilience'],
-    created_at: 1700100002
+    created_at: 1700100002,
+    actions: [
+      { id: 'ment-003:timer', type: 'timer', difficulties: ['medium'], durationSec: 1500 },
+    ]
   },
   {
     id: 'ment-004',
@@ -51,7 +61,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Read a scientific paper or book chapter and identify one implication for your own life.',
     context: 'Scientific literacy makes you harder to mislead and better equipped to navigate complexity.',
     tags: ['reading', 'science', 'learning'],
-    created_at: 1700100003
+    created_at: 1700100003,
+    actions: [
+      { id: 'ment-004:timer', type: 'timer', difficulties: ['medium'], durationSec: 1200 },
+    ]
   },
   {
     id: 'ment-005',
@@ -64,7 +77,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Read for 40 minutes in psychology and write about how one concept applies to your daily behaviour.',
     context: 'Understanding psychology is understanding yourself — and everyone you interact with.',
     tags: ['reading', 'psychology', 'self_awareness'],
-    created_at: 1700100004
+    created_at: 1700100004,
+    actions: [
+      { id: 'ment-005:timer', type: 'timer', difficulties: ['high'], durationSec: 2400 },
+    ]
   },
   {
     id: 'ment-006',
@@ -77,7 +93,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Read for 45 minutes on a historical topic and trace one cause-and-effect chain to modern times.',
     context: 'History is the longest perspective. It humbles, clarifies, and protects against repetition.',
     tags: ['reading', 'history', 'perspective'],
-    created_at: 1700100005
+    created_at: 1700100005,
+    actions: [
+      { id: 'ment-006:timer', type: 'timer', difficulties: ['high'], durationSec: 2700 },
+    ]
   },
   {
     id: 'ment-007',
@@ -103,7 +122,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Write freely for 20 minutes without stopping. Follow thoughts wherever they lead.',
     context: "Free writing externalises the mind's noise, creating space for clarity.",
     tags: ['writing', 'journaling', 'free_writing'],
-    created_at: 1700100007
+    created_at: 1700100007,
+    actions: [
+      { id: 'ment-008:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ]
   },
   {
     id: 'ment-009',
@@ -155,7 +177,11 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Spend 3 hours in deep work mode today: no phone, no internet browsing, full focus on your most important task.',
     context: 'Deep work is becoming rare and therefore more valuable. Train it deliberately.',
     tags: ['focus', 'deep_work', 'discipline'],
-    created_at: 1700100011
+    created_at: 1700100011,
+    actions: [
+      { id: 'ment-012:timer', type: 'timer', difficulties: ['medium'], durationSec: 5400 },
+      { id: 'ment-012:timer', type: 'timer', difficulties: ['high'], durationSec: 10800 },
+    ]
   },
   {
     id: 'ment-013',
@@ -194,7 +220,12 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Spend 30 minutes in complete silence. Notice what thoughts arise without engaging them.',
     context: 'The discomfort of silence reveals the quality of your relationship with your own mind.',
     tags: ['focus', 'silence', 'mindfulness'],
-    created_at: 1700100014
+    created_at: 1700100014,
+    actions: [
+      { id: 'ment-015:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'ment-015:timer', type: 'timer', difficulties: ['medium'], durationSec: 900 },
+      { id: 'ment-015:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
   {
     id: 'ment-016',
@@ -220,7 +251,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Complete a 15-minute breath-focused anxiety reset: physiological sighs, box breathing, progressive muscle relaxation.',
     context: 'The physiological sigh is the fastest known method for reducing acute stress.',
     tags: ['anxiety', 'breathwork', 'nervous_system'],
-    created_at: 1700100016
+    created_at: 1700100016,
+    actions: [
+      { id: 'ment-017:timer', type: 'timer', difficulties: ['high'], durationSec: 900 },
+    ]
   },
   {
     id: 'ment-018',
@@ -233,7 +267,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Spend 20 minutes on a creative brainstorm: set a timer, generate as many ideas as possible, then select the most interesting.',
     context: 'Creativity is a trainable muscle. The more you generate ideas, the better you get at it.',
     tags: ['creativity', 'ideation', 'brainstorm'],
-    created_at: 1700100017
+    created_at: 1700100017,
+    actions: [
+      { id: 'ment-018:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ]
   },
   {
     id: 'ment-019',
@@ -246,7 +283,12 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Commit to 45 minutes of a creative project with no external input (no references, no prompts).',
     context: 'Unstructured creative play reconnects you to intrinsic motivation.',
     tags: ['creativity', 'art', 'play'],
-    created_at: 1700100018
+    created_at: 1700100018,
+    actions: [
+      { id: 'ment-019:timer', type: 'timer', difficulties: ['low'], durationSec: 600 },
+      { id: 'ment-019:timer', type: 'timer', difficulties: ['medium'], durationSec: 1200 },
+      { id: 'ment-019:timer', type: 'timer', difficulties: ['high'], durationSec: 2700 },
+    ]
   },
   {
     id: 'ment-020',
@@ -324,7 +366,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Read 10 poems and write one of your own — any length, any form.',
     context: 'Poetry compresses meaning into language with an efficiency that prose cannot match.',
     tags: ['creativity', 'reading', 'poetry'],
-    created_at: 1700100024
+    created_at: 1700100024,
+    actions: [
+      { id: 'ment-025:timer', type: 'timer', difficulties: ['low'], durationSec: 60 },
+    ]
   },
   {
     id: 'ment-026',
@@ -350,7 +395,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Spend 30 minutes in a conversation where you ask only open questions and listen without planning your response.',
     context: 'Deep listening is rarer than deep talking. People remember those who truly listen.',
     tags: ['sharing', 'listening', 'curiosity'],
-    created_at: 1700100026
+    created_at: 1700100026,
+    actions: [
+      { id: 'ment-027:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
   {
     id: 'ment-028',
@@ -363,7 +411,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Spend 15 minutes journalling on the dichotomy of control applied to your biggest current challenge.',
     context: "The Stoics' core insight: suffering comes from confusing what is yours to control with what isn't.",
     tags: ['anxiety', 'stoicism', 'control'],
-    created_at: 1700100027
+    created_at: 1700100027,
+    actions: [
+      { id: 'ment-028:timer', type: 'timer', difficulties: ['high'], durationSec: 900 },
+    ]
   },
   {
     id: 'ment-029',
@@ -376,7 +427,10 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Read deeply from a perspective you find uncomfortable. Write one thing it made you reconsider.',
     context: 'Intellectual discomfort is the cost of a genuinely held, examined worldview.',
     tags: ['reading', 'perspective', 'critical_thinking'],
-    created_at: 1700100028
+    created_at: 1700100028,
+    actions: [
+      { id: 'ment-029:timer', type: 'timer', difficulties: ['medium'], durationSec: 1200 },
+    ]
   },
   {
     id: 'ment-030',
@@ -389,6 +443,11 @@ export const mentalCards: ContentCard[] = [
     intensity_high: 'Take a 30-minute walk with no devices. Use the time for deliberate thinking on your most important current question.',
     context: 'Boredom is the birthplace of insight. Protect space for it.',
     tags: ['focus', 'boredom', 'creativity', 'walking'],
-    created_at: 1700100029
+    created_at: 1700100029,
+    actions: [
+      { id: 'ment-030:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'ment-030:timer', type: 'timer', difficulties: ['medium'], durationSec: 900 },
+      { id: 'ment-030:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ]
   },
 ];

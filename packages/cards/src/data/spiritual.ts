@@ -13,6 +13,10 @@ export const spiritualCards: ContentCard[] = [
     context: '"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God."',
     tags: ['christianity', 'anxiety', 'peace', 'prayer'],
     created_at: 1700200000,
+    actions: [
+      { id: 'spir-001:timer', type: 'timer', difficulties: ['low'], durationSec: 180 },
+      { id: 'spir-001:timer', type: 'timer', difficulties: ['high'], durationSec: 900 },
+    ],
     tradition: 'Christianity',
     sources: [{ citation: 'Philippians 4:6-7', kind: 'scripture' }],
     agnostic_interpretation: 'Release what you cannot control through conscious acknowledgement. Anxiety is often a failure to fully surrender what lies beyond your reach.',
@@ -30,6 +34,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"But seek first his kingdom and his righteousness, and all these things will be given to you as well."',
     tags: ['christianity', 'priority', 'focus', 'purpose'],
     created_at: 1700200001,
+    actions: [
+      { id: 'spir-002:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Christianity',
     sources: [{ citation: 'Matthew 6:33', kind: 'scripture' }],
     agnostic_interpretation: 'Clarity of priority is the foundation of a focused life. Most unhappiness comes from pursuing the secondary as if it were primary.',
@@ -47,6 +54,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"As iron sharpens iron, so one person sharpens another."',
     tags: ['christianity', 'relationships', 'community'],
     created_at: 1700200002,
+    actions: [
+      { id: 'spir-003:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Christianity',
     sources: [{ citation: 'Proverbs 27:17', kind: 'scripture' }],
     agnostic_interpretation: 'The quality of your relationships determines the quality of your character. Surround yourself with people who challenge you to be better.'
@@ -63,6 +73,10 @@ export const spiritualCards: ContentCard[] = [
     context: '"The impediment to action advances action. What stands in the way becomes the way." — Marcus Aurelius',
     tags: ['stoicism', 'presence', 'mindfulness', 'focus'],
     created_at: 1700200003,
+    actions: [
+      { id: 'spir-004:timer', type: 'timer', difficulties: ['low'], durationSec: 180 },
+      { id: 'spir-004:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Stoicism',
     sources: [{ citation: 'Marcus Aurelius, Meditations 5.8', kind: 'book' }],
     agnostic_interpretation: 'Presence is not passive. It is the active choice to inhabit what is real rather than what is imagined.',
@@ -80,6 +94,10 @@ export const spiritualCards: ContentCard[] = [
     context: '"Some things are in our control and others not. Things in our control are opinion, pursuit, desire, aversion." — Epictetus',
     tags: ['stoicism', 'control', 'discipline', 'philosophy'],
     created_at: 1700200004,
+    actions: [
+      { id: 'spir-005:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'spir-005:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Stoicism',
     sources: [{ citation: 'Epictetus, Enchiridion 1', kind: 'book' }],
     agnostic_interpretation: 'The first discipline of a rational mind is learning to distinguish what belongs to you from what does not.'
@@ -96,6 +114,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"Claim yourself for yourself; gather and save the time which till lately has been forced from you or filched away." — Seneca',
     tags: ['stoicism', 'time', 'ownership', 'attention'],
     created_at: 1700200005,
+    actions: [
+      { id: 'spir-006:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Stoicism',
     sources: [{ citation: 'Seneca, Letters 1.1', kind: 'book' }],
     agnostic_interpretation: 'Time is the only currency that cannot be earned back. Protect it with the same ferocity you would your life.'
@@ -112,6 +133,11 @@ export const spiritualCards: ContentCard[] = [
     context: '"Mind is the forerunner of all actions. If one speaks or acts with a pure mind, joy follows, as a shadow that never departs."',
     tags: ['buddhism', 'mindfulness', 'meditation', 'mind'],
     created_at: 1700200006,
+    actions: [
+      { id: 'spir-007:timer', type: 'timer', difficulties: ['low'], durationSec: 180 },
+      { id: 'spir-007:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'spir-007:timer', type: 'timer', difficulties: ['high'], durationSec: 1500 },
+    ],
     tradition: 'Buddhism',
     sources: [{ citation: 'Dhammapada, verse 1', kind: 'scripture' }],
     agnostic_interpretation: 'What you attend to shapes your experience. The quality of your attention is the quality of your life.',
@@ -129,6 +155,10 @@ export const spiritualCards: ContentCard[] = [
     context: '"As a mother would protect with her life her own son, her only son, so too cultivate a boundless mind toward all beings." — Metta Sutta',
     tags: ['buddhism', 'compassion', 'loving_kindness', 'meditation'],
     created_at: 1700200007,
+    actions: [
+      { id: 'spir-008:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'spir-008:timer', type: 'timer', difficulties: ['high'], durationSec: 1500 },
+    ],
     tradition: 'Buddhism',
     sources: [{ citation: 'Metta Sutta', kind: 'scripture' }],
     agnostic_interpretation: 'Compassion is not weakness — it is the expansion of the self beyond its own narrow interests. It grows the practitioner.'
@@ -145,6 +175,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"While washing the dishes one should only be washing the dishes, which means that while washing the dishes one should be completely aware of the fact that one is washing the dishes." — Thich Nhat Hanh',
     tags: ['buddhism', 'mindfulness', 'presence', 'attention'],
     created_at: 1700200008,
+    actions: [
+      { id: 'spir-009:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ],
     tradition: 'Buddhism',
     sources: [{ citation: 'Thich Nhat Hanh, The Miracle of Mindfulness', kind: 'book' }],
     agnostic_interpretation: 'Total presence in one task is rarer and more satisfying than distracted presence in many.'
@@ -161,6 +194,10 @@ export const spiritualCards: ContentCard[] = [
     context: '"Allah does not burden a soul beyond that it can bear." — Quran 2:286',
     tags: ['islam', 'trust', 'capacity', 'ease'],
     created_at: 1700200009,
+    actions: [
+      { id: 'spir-010:timer', type: 'timer', difficulties: ['low'], durationSec: 180 },
+      { id: 'spir-010:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Islam',
     sources: [{ citation: 'Quran 2:286', kind: 'scripture' }],
     agnostic_interpretation: 'Whatever you are experiencing, you have the capacity to move through it. The burden feels total only when viewed alone.',
@@ -178,6 +215,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"For indeed, with hardship will be ease. Indeed, with hardship will be ease." — Quran 94:5-6',
     tags: ['islam', 'hardship', 'ease', 'resilience'],
     created_at: 1700200010,
+    actions: [
+      { id: 'spir-011:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Islam',
     sources: [{ citation: 'Quran 94:5-6', kind: 'scripture' }],
     agnostic_interpretation: 'Difficulty and relief are interwoven. The presence of one does not preclude the other — they coexist.'
@@ -194,6 +234,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"Let right deeds be thy motive, not the fruit which comes from them." — Bhagavad Gita 2:47',
     tags: ['hinduism', 'karma_yoga', 'detachment', 'action'],
     created_at: 1700200011,
+    actions: [
+      { id: 'spir-012:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Hinduism',
     sources: [{ citation: 'Bhagavad Gita 2:47', kind: 'scripture' }],
     agnostic_interpretation: 'Act fully, care deeply about your effort, and release attachment to the result. You control the action, not the outcome.',
@@ -211,6 +254,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"Elevate yourself through the power of your mind, and not allow yourself to be degraded by it." — Bhagavad Gita 6:5',
     tags: ['hinduism', 'self_mastery', 'discipline', 'mind'],
     created_at: 1700200012,
+    actions: [
+      { id: 'spir-013:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Hinduism',
     sources: [{ citation: 'Bhagavad Gita 6:5', kind: 'scripture' }],
     agnostic_interpretation: 'Self-mastery is the real war. Every external achievement is secondary to the discipline of the mind.'
@@ -227,6 +273,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"Return to the root is called Stillness. Stillness is called returning to one\'s destiny." — Tao Te Ching 16',
     tags: ['taoism', 'stillness', 'cycles', 'return'],
     created_at: 1700200013,
+    actions: [
+      { id: 'spir-014:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Taoism',
     sources: [{ citation: 'Tao Te Ching, Chapter 16', kind: 'book' }],
     agnostic_interpretation: 'There is wisdom in cycles. Expansion is followed by return. The capacity to return to stillness is the foundation of all action.'
@@ -243,6 +292,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"Water gives life to the ten thousand things and does not strive. It flows in places men reject and so is like the Tao." — Lao Tzu',
     tags: ['taoism', 'wu_wei', 'water', 'flow'],
     created_at: 1700200014,
+    actions: [
+      { id: 'spir-015:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Taoism',
     sources: [{ citation: 'Tao Te Ching, Chapter 8', kind: 'book' }],
     agnostic_interpretation: 'Force creates resistance. Yielding and flowing often accomplish more than effort and struggle.',
@@ -260,6 +312,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"Do not be sure of yourself until the day of your death." — Hillel, Pirkei Avot 2:4',
     tags: ['judaism', 'humility', 'self_knowledge', 'ethics'],
     created_at: 1700200015,
+    actions: [
+      { id: 'spir-016:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Judaism',
     sources: [{ citation: 'Pirkei Avot 2:4', kind: 'scripture' }],
     agnostic_interpretation: 'Humility is not self-deprecation. It is the honest acknowledgement that growth is always possible.'
@@ -276,6 +331,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"If I am not for myself, who will be for me? And if I am only for myself, what am I? And if not now, when?" — Hillel',
     tags: ['judaism', 'action', 'urgency', 'procrastination'],
     created_at: 1700200016,
+    actions: [
+      { id: 'spir-017:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Judaism',
     sources: [{ citation: 'Pirkei Avot 1:14', kind: 'scripture' }],
     agnostic_interpretation: 'The moment that will be right has already arrived. Action begins now or it begins never.'
@@ -292,6 +350,10 @@ export const spiritualCards: ContentCard[] = [
     context: '"Ik Onkar: There is one God. Truth is God\'s name." — Guru Granth Sahib',
     tags: ['sikhism', 'truth', 'unity', 'meditation'],
     created_at: 1700200017,
+    actions: [
+      { id: 'spir-018:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'spir-018:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Sikhism',
     sources: [{ citation: 'Guru Granth Sahib, Japji Sahib 1', kind: 'book' }],
     agnostic_interpretation: 'Beneath all apparent division is a deeper unity. The contemplation of this unity reduces fear and isolation.'
@@ -308,6 +370,9 @@ export const spiritualCards: ContentCard[] = [
     context: 'Awe is one of the most reliably reported spiritual experiences across all traditions and none.',
     tags: ['agnostic', 'awe', 'gratitude', 'secular'],
     created_at: 1700200018,
+    actions: [
+      { id: 'spir-019:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+    ],
     agnostic_interpretation: 'Awe is the honest response to encountering something larger than yourself. It requires no theology.'
   },
   {
@@ -322,6 +387,11 @@ export const spiritualCards: ContentCard[] = [
     context: 'Across all traditions, nature is the most universal site of spiritual encounter.',
     tags: ['agnostic', 'nature', 'presence', 'secular'],
     created_at: 1700200019,
+    actions: [
+      { id: 'spir-020:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'spir-020:timer', type: 'timer', difficulties: ['medium'], durationSec: 900 },
+      { id: 'spir-020:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ],
     agnostic_interpretation: 'Something happens in extended contact with the natural world that cannot happen anywhere else. The research supports it.',
     cross_tradition_pair: 'spir-004'
   },
@@ -351,6 +421,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"Dwell on the beauty of life. Watch the stars, and see yourself running with them." — Marcus Aurelius',
     tags: ['stoicism', 'memento_mori', 'beauty', 'presence'],
     created_at: 1700200021,
+    actions: [
+      { id: 'spir-022:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Stoicism',
     sources: [{ citation: 'Marcus Aurelius, Meditations 2.11', kind: 'book' }],
     agnostic_interpretation: 'The finite nature of life is what makes it matter. Awareness of ending generates presence.'
@@ -367,6 +440,9 @@ export const spiritualCards: ContentCard[] = [
     context: 'Gratitude is the one practice supported by every spiritual tradition, including secular psychology.',
     tags: ['agnostic', 'gratitude', 'praise', 'secular'],
     created_at: 1700200022,
+    actions: [
+      { id: 'spir-023:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     agnostic_interpretation: 'Gratitude reorients the attention from what is missing to what is present. It is one of the most reliable mood interventions known.'
   },
   {
@@ -381,6 +457,9 @@ export const spiritualCards: ContentCard[] = [
     context: 'Values clarification is the secular equivalent of a spiritual examination of conscience.',
     tags: ['agnostic', 'values', 'purpose', 'secular'],
     created_at: 1700200023,
+    actions: [
+      { id: 'spir-024:timer', type: 'timer', difficulties: ['high'], durationSec: 1500 },
+    ],
     agnostic_interpretation: 'A person who has clarified their values has a north star. Without it, every wind becomes a compelling destination.'
   },
   {
@@ -395,6 +474,11 @@ export const spiritualCards: ContentCard[] = [
     context: '"Breathing in long, one knows: I breathe in long." — Anapanasati Sutta',
     tags: ['buddhism', 'meditation', 'breath', 'mindfulness'],
     created_at: 1700200024,
+    actions: [
+      { id: 'spir-025:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'spir-025:timer', type: 'timer', difficulties: ['medium'], durationSec: 900 },
+      { id: 'spir-025:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ],
     tradition: 'Buddhism',
     sources: [{ citation: 'Anapanasati Sutta', kind: 'scripture' }],
     agnostic_interpretation: 'The breath is always available. It is the most reliable anchor to the present moment that exists.'
@@ -411,6 +495,11 @@ export const spiritualCards: ContentCard[] = [
     context: '"Be still, and know that I am God." — Psalm 46:10',
     tags: ['christianity', 'stillness', 'contemplation', 'silence'],
     created_at: 1700200025,
+    actions: [
+      { id: 'spir-026:timer', type: 'timer', difficulties: ['low'], durationSec: 300 },
+      { id: 'spir-026:timer', type: 'timer', difficulties: ['medium'], durationSec: 900 },
+      { id: 'spir-026:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ],
     tradition: 'Christianity',
     sources: [{ citation: 'Psalm 46:10', kind: 'scripture' }],
     agnostic_interpretation: 'Stillness is not passive. It is the active suspension of noise that allows something deeper to surface.',
@@ -428,6 +517,10 @@ export const spiritualCards: ContentCard[] = [
     context: '"Verily, in the remembrance of Allah do hearts find rest." — Quran 13:28',
     tags: ['islam', 'dhikr', 'peace', 'contemplation'],
     created_at: 1700200026,
+    actions: [
+      { id: 'spir-027:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'spir-027:timer', type: 'timer', difficulties: ['high'], durationSec: 1500 },
+    ],
     tradition: 'Islam',
     sources: [{ citation: 'Quran 13:28', kind: 'scripture' }],
     agnostic_interpretation: 'Repetitive contemplative practice — whatever its object — quiets the anxious mind and restores a sense of grounding.'
@@ -444,6 +537,10 @@ export const spiritualCards: ContentCard[] = [
     context: "The examined life was not Socrates' aspiration — it was his minimum standard.",
     tags: ['agnostic', 'self_examination', 'honesty', 'growth'],
     created_at: 1700200027,
+    actions: [
+      { id: 'spir-028:timer', type: 'timer', difficulties: ['medium'], durationSec: 600 },
+      { id: 'spir-028:timer', type: 'timer', difficulties: ['high'], durationSec: 1800 },
+    ],
     agnostic_interpretation: 'Honest self-examination is painful and necessary. The avoidance of it is the beginning of stagnation.'
   },
   {
@@ -458,6 +555,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"He who hates no creature, who is friendly and compassionate to all... he is dear to Me." — Bhagavad Gita 12:13',
     tags: ['hinduism', 'compassion', 'non_violence', 'friendliness'],
     created_at: 1700200028,
+    actions: [
+      { id: 'spir-029:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Hinduism',
     sources: [{ citation: 'Bhagavad Gita 12:13-14', kind: 'scripture' }],
     agnostic_interpretation: 'Extending goodwill beyond your natural preference is a practice, not a disposition. It is cultivated.'
@@ -474,6 +574,9 @@ export const spiritualCards: ContentCard[] = [
     context: '"Knowing others is wisdom. Knowing yourself is enlightenment. Mastering others requires force. Mastering yourself requires strength." — Lao Tzu',
     tags: ['taoism', 'self_knowledge', 'wisdom', 'authenticity'],
     created_at: 1700200029,
+    actions: [
+      { id: 'spir-030:timer', type: 'timer', difficulties: ['high'], durationSec: 1200 },
+    ],
     tradition: 'Taoism',
     sources: [{ citation: 'Tao Te Ching, Chapter 33', kind: 'book' }],
     agnostic_interpretation: 'Self-knowledge is the most undervalued form of intelligence. It underpins every other wisdom.'

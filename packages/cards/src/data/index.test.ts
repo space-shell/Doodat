@@ -102,4 +102,28 @@ describe('card data integrity', () => {
       expect(['low', 'medium', 'high']).toContain(card.difficulty);
     }
   });
+
+  it('timer actions have positive durationSec and valid difficulties', () => {
+    for (const card of allCards) {
+      for (const action of card.actions ?? []) {
+        if (action.type !== 'timer') continue;
+        expect(action.durationSec, `${card.id} timer missing durationSec`).toBeGreaterThan(0);
+        expect(action.difficulties, `${card.id} timer missing difficulties`).toBeDefined();
+        expect(action.difficulties!.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('timer actions for the same card do not overlap difficulties', () => {
+    for (const card of allCards) {
+      const timers = (card.actions ?? []).filter((a) => a.type === 'timer');
+      const seen = new Set<string>();
+      for (const t of timers) {
+        for (const d of t.difficulties ?? []) {
+          expect(seen.has(d), `${card.id} has overlapping timer difficulty ${d}`).toBe(false);
+          seen.add(d);
+        }
+      }
+    }
+  });
 });
