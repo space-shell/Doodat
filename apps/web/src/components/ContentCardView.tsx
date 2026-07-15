@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { Show, For, createSignal } from 'solid-js';
 import { getCardTask, type CardAction, type ContentCard as Card } from '@doodat/cards';
 import { emit } from '../streams/intents';
+import { state } from '../store';
 import { haptic } from '../utils/haptics';
 import TimerButton from './TimerButton';
 
@@ -15,7 +16,7 @@ const DOMAIN_DOT = {
 const ContentCardView: Component<{ card: Card }> = (props) => {
   const task = () => getCardTask(props.card);
   const [responses, setResponses] = createSignal<Record<string, string>>({});
-  const [completed, setCompleted] = createSignal(false);
+  const completed = () => state.daily.outcomes.some((o) => o.cardId === props.card.id);
 
   // An action activates when its `difficulties` is unset or includes the card's own difficulty.
   const textActions = (): CardAction[] =>
@@ -30,7 +31,6 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
 
   const commit = () => {
     if (completed()) return;
-    setCompleted(true);
     haptic(15);
     const r = responses();
     emit({
