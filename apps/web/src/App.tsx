@@ -10,6 +10,7 @@ import Onboarding from './components/Onboarding';
 import IntensitySelect from './components/IntensitySelect';
 import CompletionSummary from './components/CompletionSummary';
 import SettingsView from './components/SettingsView';
+import LoadingCard from './components/LoadingCard';
 import { settingsOpen } from './components/drafts';
 import { neuOnEnter, neuOnExit } from './neuTransition';
 
@@ -43,8 +44,16 @@ const App: Component = () => {
     return k;
   });
 
+  const bootMode = createMemo(() =>
+    state.bootPhase === 'loading' ? 'loading' : state.bootPhase === 'error' ? 'error' : null,
+  );
+
   return (
-    <main class="min-h-dvh flex flex-col items-center p-6">
+    <Show
+      when={bootMode() === null}
+      fallback={<LoadingCard mode={bootMode() as 'loading' | 'error'} />}
+    >
+      <main class="min-h-dvh flex flex-col items-center p-6">
       <Show when={current()} fallback={<p class="text-dodaat-textMuted">Loading…</p>}>
         <div class="w-full max-w-md flex-1 flex flex-col">
           <Show when={showCardNav()}>
@@ -92,6 +101,7 @@ const App: Component = () => {
         </div>
       </Show>
     </main>
+    </Show>
   );
 };
 
