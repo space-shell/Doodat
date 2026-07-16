@@ -1,4 +1,5 @@
 import type { Event, EventTemplate } from 'nostr-tools';
+import type { IntensityLevel } from '@doodat/cards';
 
 /**
  * Pure codec for a single day-task Nostr event.
@@ -7,12 +8,15 @@ import type { Event, EventTemplate } from 'nostr-tools';
  *   kind  = DAY_TASK_KIND
  *   d     = "{date}:{taskId}"      — unique per pubkey+day+task (replaceability)
  *   #day  = "{date}"               — the discovery index devices filter on
- *   content = JSON { status, order }
+ *   content = JSON { status, order, intensity }
  *
  * `status ∈ "todo" | "done"`; `order` = deck position (taskIds alone do not
- * define cross-device order). `domain` is omitted — derivable from the cardId
- * prefix. Decoding is structural only; signature verification is the relay
- * layer's concern.
+ * define cross-device order); `intensity` = the originating day's volume, so
+ * synced devices can rebuild accurate CardOutcomes. The event's `created_at`
+ * (seconds) is carried through as the task's publish time; for a done task it
+ * approximates when it was completed. `domain` is omitted — derivable from the
+ * cardId prefix. Decoding is structural only; signature verification is the
+ * relay layer's concern.
  */
 export const DAY_TASK_KIND = 30018;
 const TAG_DAY = 'day';
@@ -23,12 +27,14 @@ export type TaskStatus = 'todo' | 'done';
 export interface DayTaskPayload {
   status: TaskStatus;
   order: number;
+  intensity: IntensityLevel;
 }
 
-/** A decoded day-task: addressing (date, taskId) plus payload. */
+/** A decoded day-task: addressing (date, taskId) plus payload + publish time. */
 export interface DayTask extends DayTaskPayload {
   date: string; // YYYY-MM-DD
   taskId: string;
+  createdAt: number; // event created_at, unix seconds
 }
 
 /** Build the `d` tag. */
@@ -49,7 +55,8 @@ export function decodeDayTaskContent(raw: string): DayTaskPayload | null {
     const o = v as Record<string, unknown>;
     if (o.status !== 'todo' && o.status !== 'done') return null;
     if (typeof o.order !== 'number' || !Number.isFinite(o.order) || o.order < 0) return null;
-    return { status: o.status, order: Math.floor(o.order) };
+    if (o.intensity !== 'low' && o.intensity !== 'medium' && o.intensity !== 'high') return null;
+    return { status: o.status, order: Math.floor(o.order), intensity: o.intensity };
   } catch {
     return null;
   }
@@ -94,5 +101,5 @@ export function decodeDayTask(event: Event): DayTask | null {
   const payload = decodeDayTaskContent(event.content);
   if (!payload) return null;
 
-  return { date, taskId, ...payload };
+  return { date, taskId, ...payload, createdAt: event.created_at };
 }

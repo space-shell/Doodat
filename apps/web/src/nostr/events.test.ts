@@ -34,17 +34,15 @@ describe('dayTaskDTag', () => {
 
 describe('content codec', () => {
   it('round-trips a todo payload', () => {
-    expect(decodeDayTaskContent(encodeDayTaskContent({ status: 'todo', order: 0 }))).toEqual({
-      status: 'todo',
-      order: 0,
-    });
+    expect(
+      decodeDayTaskContent(encodeDayTaskContent({ status: 'todo', order: 0, intensity: 'medium' })),
+    ).toEqual({ status: 'todo', order: 0, intensity: 'medium' });
   });
 
   it('round-trips a done payload', () => {
-    expect(decodeDayTaskContent(encodeDayTaskContent({ status: 'done', order: 7 }))).toEqual({
-      status: 'done',
-      order: 7,
-    });
+    expect(
+      decodeDayTaskContent(encodeDayTaskContent({ status: 'done', order: 7, intensity: 'high' })),
+    ).toEqual({ status: 'done', order: 7, intensity: 'high' });
   });
 
   it('rejects malformed JSON', () => {
@@ -52,74 +50,100 @@ describe('content codec', () => {
   });
 
   it('rejects missing fields', () => {
-    expect(decodeDayTaskContent(JSON.stringify({ status: 'todo' }))).toBeNull();
-    expect(decodeDayTaskContent(JSON.stringify({ order: 0 }))).toBeNull();
+    expect(decodeDayTaskContent(JSON.stringify({ status: 'todo', order: 0 }))).toBeNull();
+    expect(decodeDayTaskContent(JSON.stringify({ order: 0, intensity: 'low' }))).toBeNull();
   });
 
   it('rejects invalid status values', () => {
-    expect(decodeDayTaskContent(JSON.stringify({ status: 'pending', order: 0 }))).toBeNull();
-    expect(decodeDayTaskContent(JSON.stringify({ status: 1, order: 0 }))).toBeNull();
+    expect(
+      decodeDayTaskContent(JSON.stringify({ status: 'pending', order: 0, intensity: 'low' })),
+    ).toBeNull();
+    expect(
+      decodeDayTaskContent(JSON.stringify({ status: 1, order: 0, intensity: 'low' })),
+    ).toBeNull();
   });
 
   it('rejects non-finite or negative order', () => {
-    expect(decodeDayTaskContent(JSON.stringify({ status: 'done', order: -1 }))).toBeNull();
-    expect(decodeDayTaskContent(JSON.stringify({ status: 'done', order: 'x' }))).toBeNull();
+    expect(
+      decodeDayTaskContent(JSON.stringify({ status: 'done', order: -1, intensity: 'low' })),
+    ).toBeNull();
+    expect(
+      decodeDayTaskContent(JSON.stringify({ status: 'done', order: 'x', intensity: 'low' })),
+    ).toBeNull();
+  });
+
+  it('rejects invalid intensity', () => {
+    expect(
+      decodeDayTaskContent(JSON.stringify({ status: 'done', order: 0, intensity: 'extreme' })),
+    ).toBeNull();
+    expect(
+      decodeDayTaskContent(JSON.stringify({ status: 'done', order: 0, intensity: 2 })),
+    ).toBeNull();
   });
 });
 
 describe('buildDayTaskTemplate', () => {
   it('uses the day-task kind, a d tag, and a day tag', () => {
-    const t = buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 2 }, 1000);
+    const t = buildDayTaskTemplate(
+      DATE,
+      TASK_ID,
+      { status: 'todo', order: 2, intensity: 'medium' },
+      1000,
+    );
     expect(t.kind).toBe(DAY_TASK_KIND);
     expect(t.tags).toContainEqual(['d', '2026-07-16:phys-003']);
     expect(t.tags).toContainEqual(['day', '2026-07-16']);
     expect(t.created_at).toBe(1000);
-    expect(decodeDayTaskContent(t.content)).toEqual({ status: 'todo', order: 2 });
+    expect(decodeDayTaskContent(t.content)).toEqual({ status: 'todo', order: 2, intensity: 'medium' });
   });
 });
 
 describe('decodeDayTask', () => {
-  it('round-trips through a built template', () => {
-    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'done', order: 4 }, 9));
+  it('round-trips through a built template, carrying createdAt', () => {
+    const e = asEvent(
+      buildDayTaskTemplate(DATE, TASK_ID, { status: 'done', order: 4, intensity: 'high' }, 9),
+    );
     expect(decodeDayTask(e)).toEqual({
       date: DATE,
       taskId: TASK_ID,
       status: 'done',
       order: 4,
+      intensity: 'high',
+      createdAt: 9,
     });
   });
 
   it('returns null for a different kind', () => {
-    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0 }));
+    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0, intensity: 'low' }));
     expect(decodeDayTask({ ...e, kind: 1 })).toBeNull();
   });
 
   it('returns null when the d tag is missing', () => {
-    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0 }));
+    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0, intensity: 'low' }));
     e.tags = e.tags.filter((t) => t[0] !== 'd');
     expect(decodeDayTask(e)).toBeNull();
   });
 
   it('returns null when the day tag is missing', () => {
-    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0 }));
+    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0, intensity: 'low' }));
     e.tags = e.tags.filter((t) => t[0] !== 'day');
     expect(decodeDayTask(e)).toBeNull();
   });
 
   it('returns null when d-tag date disagrees with day tag (tamper)', () => {
-    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0 }));
+    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0, intensity: 'low' }));
     e.tags = e.tags.map((t) => (t[0] === 'day' ? ['day', '2026-07-15'] : t));
     expect(decodeDayTask(e)).toBeNull();
   });
 
   it('returns null for malformed content', () => {
-    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0 }));
+    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0, intensity: 'low' }));
     e.content = 'garbage';
     expect(decodeDayTask(e)).toBeNull();
   });
 
   it('returns null for a badly-shaped date', () => {
-    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0 }));
+    const e = asEvent(buildDayTaskTemplate(DATE, TASK_ID, { status: 'todo', order: 0, intensity: 'low' }));
     // corrupt both d and day to an invalid date string
     e.tags = [
       ['d', 'not-a-date:phys-003'],

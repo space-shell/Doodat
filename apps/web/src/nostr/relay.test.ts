@@ -38,46 +38,62 @@ describe('dayFilter', () => {
 
 describe('mergeDayTasks', () => {
   it('decodes a single signed event', () => {
-    const e = sign(buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0 }, 1000));
+    const e = sign(
+      buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0, intensity: 'medium' }, 1000),
+    );
     expect(mergeDayTasks([e])).toEqual([
-      { date: '2026-07-16', taskId: 'phys-003', status: 'todo', order: 0 },
+      { date: '2026-07-16', taskId: 'phys-003', status: 'todo', order: 0, intensity: 'medium', createdAt: 1000 },
     ]);
   });
 
   it('keeps the latest created_at per task (replaceable semantics)', () => {
-    const older = sign(buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0 }, 1000));
-    const newer = sign(buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'done', order: 0 }, 2000));
+    const older = sign(
+      buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0, intensity: 'medium' }, 1000),
+    );
+    const newer = sign(
+      buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'done', order: 0, intensity: 'medium' }, 2000),
+    );
     expect(mergeDayTasks([older, newer])).toEqual([
-      { date: '2026-07-16', taskId: 'phys-003', status: 'done', order: 0 },
+      { date: '2026-07-16', taskId: 'phys-003', status: 'done', order: 0, intensity: 'medium', createdAt: 2000 },
     ]);
     // order of input does not matter
     expect(mergeDayTasks([newer, older])).toEqual([
-      { date: '2026-07-16', taskId: 'phys-003', status: 'done', order: 0 },
+      { date: '2026-07-16', taskId: 'phys-003', status: 'done', order: 0, intensity: 'medium', createdAt: 2000 },
     ]);
   });
 
   it('keeps distinct tasks and sorts ascending by order', () => {
-    const a = sign(buildDayTaskTemplate('2026-07-16', 'spir-002', { status: 'todo', order: 5 }, 1000));
-    const b = sign(buildDayTaskTemplate('2026-07-16', 'phys-001', { status: 'done', order: 0 }, 1000));
+    const a = sign(
+      buildDayTaskTemplate('2026-07-16', 'spir-002', { status: 'todo', order: 5, intensity: 'low' }, 1000),
+    );
+    const b = sign(
+      buildDayTaskTemplate('2026-07-16', 'phys-001', { status: 'done', order: 0, intensity: 'low' }, 1000),
+    );
     const merged = mergeDayTasks([a, b]);
     expect(merged.map((t) => t.taskId)).toEqual(['phys-001', 'spir-002']);
     expect(merged.map((t) => t.order)).toEqual([0, 5]);
   });
 
   it('drops events of a different kind', () => {
-    const good = sign(buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0 }, 1000));
+    const good = sign(
+      buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0, intensity: 'medium' }, 1000),
+    );
     const badKind = { ...good, kind: 1 } as unknown as ReturnType<typeof sign>;
     expect(mergeDayTasks([good, badKind])).toHaveLength(1);
   });
 
   it('drops events with an invalid signature', () => {
-    const e = sign(buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0 }, 1000));
+    const e = sign(
+      buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0, intensity: 'medium' }, 1000),
+    );
     const forged = plain({ ...e, sig: 'a'.repeat(128) });
     expect(mergeDayTasks([forged])).toEqual([]);
   });
 
   it('drops events with malformed content', () => {
-    const e = sign(buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0 }, 1000));
+    const e = sign(
+      buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0, intensity: 'medium' }, 1000),
+    );
     const badContent = plain({ ...e, content: 'garbage' });
     // changing content invalidates the signature, so it's dropped on verify;
     // this confirms malformed/unsigned content never reaches the output

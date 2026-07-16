@@ -1,12 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { deckFromDayTasks, completedTaskIds, dealToPublishList } from './sync';
+import { deckFromDayTasks, completedTaskIds, dealToPublishList, outcomesFromDayTasks } from './sync';
 import type { DayTask } from './events';
 import type { DeckCard } from '../types';
 
 const DATE = '2026-07-16';
 
-function task(taskId: string, order: number, status: 'todo' | 'done' = 'todo'): DayTask {
-  return { date: DATE, taskId, status, order };
+function task(
+  taskId: string,
+  order: number,
+  status: 'todo' | 'done' = 'todo',
+  intensity: 'low' | 'medium' | 'high' = 'medium',
+  createdAt = 1000,
+): DayTask {
+  return { date: DATE, taskId, status, order, intensity, createdAt };
 }
 
 describe('deckFromDayTasks', () => {
@@ -71,5 +77,41 @@ describe('dealToPublishList', () => {
 
   it('returns an empty list for a deck with no content cards', () => {
     expect(dealToPublishList([{ id: 'sys-x', type: 'welcome' }])).toEqual([]);
+  });
+});
+
+describe('outcomesFromDayTasks', () => {
+  it('rebuilds CardOutcomes from done tasks (intensity + ms timestamp from event)', () => {
+    const outcomes = outcomesFromDayTasks([
+      task('phys-001', 0, 'done', 'high', 1500),
+      task('ment-001', 1, 'todo'),
+      task('spir-001', 2, 'done', 'low', 2000),
+    ]);
+    expect(outcomes).toEqual([
+      {
+        cardId: 'phys-001',
+        domain: 'physical',
+        swipeDirection: 'complete',
+        intensity: 'high',
+        difficulty: 'high',
+        timestamp: 1_500_000,
+      },
+      {
+        cardId: 'spir-001',
+        domain: 'spiritual',
+        swipeDirection: 'complete',
+        intensity: 'low',
+        difficulty: expect.any(String),
+        timestamp: 2_000_000,
+      },
+    ]);
+  });
+
+  it('skips unknown task ids', () => {
+    expect(outcomesFromDayTasks([task('phys-999', 0, 'done')])).toEqual([]);
+  });
+
+  it('returns an empty array when nothing is done', () => {
+    expect(outcomesFromDayTasks([task('phys-001', 0, 'todo')])).toEqual([]);
   });
 });

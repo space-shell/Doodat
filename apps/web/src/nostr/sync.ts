@@ -1,4 +1,5 @@
 import { cardById } from '@doodat/cards';
+import type { CardOutcome } from '@doodat/cards';
 import type { DeckCard } from '../types';
 import type { DayTask } from './events';
 
@@ -12,9 +13,9 @@ import type { DayTask } from './events';
  * exist, the originating device deals locally (the existing path) and then
  * publishes the dealt set via `dealToPublishList`.
  *
- * The completion/timestamp/intensity of a synced task is a present-tense
- * concern (done/todo), not historical — stats on a purely-synced device are an
- * approximation for the MVP.
+ * Each task event carries the originating day's `intensity`, so synced devices
+ * can rebuild accurate CardOutcomes; the event `created_at` (seconds) serves as
+ * the completion timestamp for done tasks.
  */
 
 /**
@@ -52,4 +53,27 @@ export function dealToPublishList(deck: DeckCard[]): { taskId: string; order: nu
     order++;
   }
   return out;
+}
+
+/**
+ * Rebuild CardOutcomes from synced done-tasks: intensity comes from the event,
+ * difficulty from the card, timestamp from the event created_at (s → ms).
+ * Unknown ids are skipped.
+ */
+export function outcomesFromDayTasks(tasks: DayTask[]): CardOutcome[] {
+  const outcomes: CardOutcome[] = [];
+  for (const t of tasks) {
+    if (t.status !== 'done') continue;
+    const card = cardById.get(t.taskId);
+    if (!card) continue;
+    outcomes.push({
+      cardId: card.id,
+      domain: card.domain,
+      swipeDirection: 'complete',
+      intensity: t.intensity,
+      difficulty: card.difficulty,
+      timestamp: t.createdAt * 1000,
+    });
+  }
+  return outcomes;
 }
