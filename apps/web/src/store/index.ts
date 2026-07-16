@@ -5,7 +5,7 @@ import { wireNostrEffects } from '../streams/nostrEffects';
 import { initialState, buildDailyDeck, nextUnresolvedIndex } from '../streams/reducer';
 import { todayString } from '@doodat/cards';
 import { FLAGS } from '../config/flags';
-import { loadKeyPair } from '../nostr/keys';
+import { loadKeyPair, saveKeyPair, generateKeyPair, type KeyPair } from '../nostr/keys';
 import type { AppState, UserProfile, DailyState, StreakState, BootPhase } from '../types';
 
 // ─── Persistence keys ─────────────────────────────────────────────────────────
@@ -42,10 +42,25 @@ function freshProfile(): UserProfile {
 
 // ─── Seed (load persisted state, or start fresh) ──────────────────────────────
 
+/**
+ * Under the NOSTR_IDENTITY flag, ensure a keypair exists — generating one on
+ * first encounter (new user or migrating an existing localId-only profile) and
+ * persisting it. The pubkey becomes the deterministic deck seed. Returns null
+ * when the flag is off (legacy local-only behaviour).
+ */
+function ensureKey(): KeyPair | null {
+  if (!FLAGS.NOSTR_IDENTITY) return null;
+  const existing = loadKeyPair();
+  if (existing) return existing;
+  const fresh = generateKeyPair();
+  saveKeyPair(fresh);
+  return fresh;
+}
+
 function loadSeed(): AppState {
   // Under the NOSTR_IDENTITY flag, the pubkey becomes the deterministic deck
   // seed (so every device deals identically) and boot blocks on a Nostr fetch.
-  const key = FLAGS.NOSTR_IDENTITY ? loadKeyPair() : null;
+  const key = ensureKey();
 
   const persistedProfile = read<UserProfile>(KEYS.PROFILE);
 
