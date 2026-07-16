@@ -173,9 +173,34 @@ export function reduce(state: AppState, intent: Intent): AppState {
     case 'RESET_DAY_TO_WIZARD':
       return handleResetDayToWizard(state);
 
+    case 'SET_BOOT_PHASE':
+      return { ...state, bootPhase: intent.phase };
+
+    case 'LOAD_DAY_TASKS':
+      return handleLoadDayTasks(state, intent.date, intent.deck, intent.outcomes);
+
     default:
       return state;
   }
+}
+
+/** Apply a day deck + outcomes synced from Nostr, recompute streak, land ready. */
+function handleLoadDayTasks(
+  state: AppState,
+  date: string,
+  deck: DeckCard[],
+  outcomes: CardOutcome[],
+): AppState {
+  const streak = recomputeStreak(state.streak, outcomes, date);
+  const currentIndex = nextUnresolvedIndex(deck, outcomes, 0);
+  return {
+    ...state,
+    daily: { date, outcomes },
+    deck,
+    streak,
+    currentIndex,
+    bootPhase: 'ready',
+  };
 }
 
 function handleSetIntensity(state: AppState, intensity: AppState['profile']['currentIntensity']): AppState {

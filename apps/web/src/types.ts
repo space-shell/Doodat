@@ -51,6 +51,9 @@ export type DeckCard = ContentCard | SystemCard;
 
 // ─── App state ────────────────────────────────────────────────────────────────
 
+/** Boot phase under the NOSTR_IDENTITY flag: undefined when the flag is off. */
+export type BootPhase = 'loading' | 'ready' | 'error';
+
 export interface AppState {
   profile: UserProfile;
   daily: DailyState;
@@ -58,6 +61,7 @@ export interface AppState {
   streak: StreakState;
   deck: DeckCard[];
   currentIndex: number;
+  bootPhase?: BootPhase;
 }
 
 // ─── Intents (emitted by UI, processed by the reducer) ────────────────────────
@@ -70,7 +74,10 @@ export type Intent =
   | { type: 'NAVIGATE'; index: number } // jump to a specific deck position (free navigation)
   | { type: 'STEP'; delta: 1 | -1 } // move to the adjacent content card (swipe navigation)
   | { type: 'DAILY_RESET'; date: string }
-  | { type: 'RESET_DAY_TO_WIZARD' };
+  | { type: 'RESET_DAY_TO_WIZARD' }
+  // ── Nostr-sync intents (only emitted when NOSTR_IDENTITY is on) ──
+  | { type: 'SET_BOOT_PHASE'; phase: BootPhase }
+  | { type: 'LOAD_DAY_TASKS'; date: string; deck: DeckCard[]; outcomes: CardOutcome[] };
 
 export function isContentCard(card: DeckCard): card is ContentCard {
   return card.type === 'content';

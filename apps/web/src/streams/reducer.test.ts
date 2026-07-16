@@ -446,3 +446,42 @@ describe('RESET_DAY_TO_WIZARD', () => {
     expect(next.recentCardIds).toEqual(s.recentCardIds);
   });
 });
+
+describe('SET_BOOT_PHASE', () => {
+  it('sets bootPhase and changes nothing else', () => {
+    const s = makeState();
+    const next = reduce(s, { type: 'SET_BOOT_PHASE', phase: 'loading' });
+    expect(next.bootPhase).toBe('loading');
+    expect(next.deck).toBe(s.deck);
+    expect(next.daily).toBe(s.daily);
+  });
+});
+
+describe('LOAD_DAY_TASKS', () => {
+  const dealt = dealDailyCards({ date: DATE, pubkey: 'pk', intensity: 'medium', volume: 2 });
+  const first = dealt[0];
+  const syncedDeck: DeckCard[] = dealt;
+  const syncedOutcomes = [
+    { cardId: first.id, domain: first.domain, swipeDirection: 'complete', intensity: 'medium', difficulty: first.difficulty, timestamp: 1 } as const,
+  ];
+
+  it('replaces deck + outcomes, lands on first unresolved, marks ready', () => {
+    const s = makeState();
+    const next = reduce(s, { type: 'LOAD_DAY_TASKS', date: DATE, deck: syncedDeck, outcomes: syncedOutcomes });
+    expect(next.deck).toBe(syncedDeck);
+    expect(next.daily).toEqual({ date: DATE, outcomes: syncedOutcomes });
+    expect(next.bootPhase).toBe('ready');
+    // first card already completed → lands on the second
+    expect(next.currentIndex).toBe(1);
+  });
+
+  it('recomputes streak from the synced outcomes', () => {
+    const s = makeState({
+      streak: { count: 0, lastCompletedDate: dayBefore(DATE), dayStartCount: 0, dayStartLastCompletedDate: dayBefore(DATE) },
+    });
+    const next = reduce(s, { type: 'LOAD_DAY_TASKS', date: DATE, deck: syncedDeck, outcomes: syncedOutcomes });
+    // one completion today + yesterday was completed → streak increments
+    expect(next.streak.count).toBe(1);
+    expect(next.streak.lastCompletedDate).toBe(DATE);
+  });
+});
