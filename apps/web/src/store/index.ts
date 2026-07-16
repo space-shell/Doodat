@@ -1,9 +1,12 @@
 import { createStore, reconcile } from 'solid-js/store';
 import { createEffect } from 'solid-js';
 import { state$ } from '../streams/stateMachine';
+import { wireNostrEffects } from '../streams/nostrEffects';
 import { initialState, buildDailyDeck, nextUnresolvedIndex } from '../streams/reducer';
 import { todayString } from '@doodat/cards';
-import type { AppState, UserProfile, DailyState, StreakState } from '../types';
+import { FLAGS } from '../config/flags';
+import { loadKeyPair } from '../nostr/keys';
+import type { AppState, UserProfile, DailyState, StreakState, BootPhase } from '../types';
 
 // ─── Persistence keys ─────────────────────────────────────────────────────────
 
@@ -40,6 +43,10 @@ function freshProfile(): UserProfile {
 // ─── Seed (load persisted state, or start fresh) ──────────────────────────────
 
 function loadSeed(): AppState {
+  // Under the NOSTR_IDENTITY flag, the pubkey becomes the deterministic deck
+  // seed (so every device deals identically) and boot blocks on a Nostr fetch.
+  const key = FLAGS.NOSTR_IDENTITY ? loadKeyPair() : null;
+
   const persistedProfile = read<UserProfile>(KEYS.PROFILE);
 
   // First launch: no profile → onboarding.
@@ -58,7 +65,10 @@ function loadSeed(): AppState {
     dayStartLastCompletedDate: rawStreak?.dayStartLastCompletedDate ?? rawStreak?.lastCompletedDate ?? null,
   };
 
-  const profile = persistedProfile;
+  // When a key exists, it is the deck seed; boot blocks on a fetch once onboarded.
+  const profile = key ? { ...persistedProfile, localId: key.pk } : persistedProfile;
+  const bootPhase: BootPhase | undefined =
+    key && profile.onboardingComplete ? 'loading' : undefined;
 
   // New day since last run → reset daily state + rebuild deck from today.
   if (!persistedDaily || persistedDaily.date !== today) {
@@ -69,6 +79,7 @@ function loadSeed(): AppState {
       streak,
       deck: buildDailyDeck(profile, today, recentCardIds),
       currentIndex: 0,
+      bootPhase,
     };
   }
 
@@ -81,6 +92,7 @@ function loadSeed(): AppState {
     streak,
     deck,
     currentIndex: nextUnresolvedIndex(deck, persistedDaily.outcomes, 0),
+    bootPhase,
   };
 }
 
@@ -89,8 +101,11 @@ function loadSeed(): AppState {
 const seed = loadSeed();
 const [state, setState] = createStore<AppState>(seed);
 
-// Bridge the RxJS state stream → Solid store (fine-grained via reconcile).
-state$(seed).subscribe((next) => setState(reconcile(next)));
+// Single state stream; bridge to Solid, and run Nostr side-effects (inert when
+// the flag is off / no key).
+const stateStream = state$(seed);
+stateStream.subscribe((next) => setState(reconcile(next)));
+wireNostrEffects(stateStream, seed);
 
 // Persist slices whenever they change.
 createEffect(() => write(KEYS.PROFILE, state.profile));
