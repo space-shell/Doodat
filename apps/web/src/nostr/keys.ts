@@ -50,6 +50,11 @@ export function derivePublicKey(sk: string): string {
   return getPublicKey(hexToBytes(sk));
 }
 
+/** Convert a hex secret key to the `Uint8Array` nostr-tools requires for signing. */
+export function secretKeyToBytes(sk: string): Uint8Array {
+  return hexToBytes(sk);
+}
+
 /** Generate a fresh random key pair. */
 export function generateKeyPair(): KeyPair {
   const sk = bytesToHex(generateSecretKey());
