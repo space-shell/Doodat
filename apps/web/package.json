@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@doodat/cards": "workspace:*",
+    "nostr-tools": "^2.23.12",
     "rxjs": "^7.8.1",
     "solid-js": "^1.8.22",
     "solid-transition-group": "^0.3.0"
