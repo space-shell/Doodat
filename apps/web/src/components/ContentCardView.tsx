@@ -103,12 +103,13 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
         </div>
       </Show>
 
-      <div class="mt-auto">
+      <div class="flex justify-center my-auto">
         <Show when={timerAction()?.durationSec}>
-          <div class="flex justify-center py-6">
             <TimerButton durationSec={timerAction()!.durationSec!} />
-          </div>
         </Show>
+      </div>
+
+      <div>
         <button
           data-testid="complete-btn"
           class="neu-button w-full py-3 text-sm font-semibold text-dodaat-goldDark transition-opacity"

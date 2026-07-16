@@ -133,8 +133,8 @@ const TimerButton: Component<{ durationSec: number }> = (props) => {
 
   const display = () => {
     switch (phase()) {
-      case 'idle':      return 'Hold to start';
-      case 'arming':    return 'Starting…';
+      case 'idle':      return 'Hold';
+      case 'arming':    return 'Hold';
       case 'countin':   return String(countinNum());
       case 'running':   return fmt(remaining());
       case 'stopping':  return fmt(remaining());

@@ -24,7 +24,7 @@ const IntensitySelect: Component<{ mode: 'onboarding' | 'daily' }> = (props) => 
           {(opt) => (
             <button
               data-testid={`intensity-${opt.level}`}
-              class={`w-full text-left p-4 rounded-button transition ${intensity() === opt.level ? 'neu-inset ring-2 ring-dodaat-gold' : 'neu-button'}`}
+              class={`w-full text-left p-4 rounded-button transition ${intensity() === opt.level ? 'neu-inset' : 'neu-button'}`}
               onClick={() => setIntensity(opt.level)}
             >
               <span class="block font-semibold text-dodaat-textPrimary">{opt.label}</span>

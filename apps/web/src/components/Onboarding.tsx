@@ -30,9 +30,17 @@ const Onboarding: Component<{ card: SystemCard }> = (props) => {
               <h1 class="text-3xl font-extrabold tracking-wide text-dodaat-textPrimary">dodaat</h1>
               <p class="mt-2 text-sm tracking-wide text-dodaat-textMuted">do one day at a time</p>
               <p class="mt-6 text-sm leading-relaxed text-dodaat-textSecondary">
-                A small deck of practice cards each day — for the body, the mind,
-                and the spirit. You choose how many. Complete each; the deck
-                reshuffles tomorrow.
+                A small deck of practice cards each day,
+                <br/>
+                for the body, the mind,
+                <br/>
+                and the spirit.
+                <br/>
+                <br/>
+                Work with your own level of energy.
+                <br/>
+                <br/>
+                The deck reshuffles tomorrow.
               </p>
             </div>
           </Match>
