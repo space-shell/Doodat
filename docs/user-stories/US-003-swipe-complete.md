@@ -28,7 +28,7 @@
 
 ## Notes
 
-- No swipe gestures — the UI is button-driven (Done/Skip).
+- The Done button is the only way to complete a card. Swipe gestures exist but are pure navigation (see US-015) — they never record an outcome.
 - The SWIPE intent is an update-in-place: re-swiping a card replaces the existing outcome, not appends.
 - On completion, the deck auto-advances to the next unresolved content card (scanning forward, then wrapping).
 - `recentCardIds` is appended (capped at 63) on first swipe; not duplicated on re-swipe.

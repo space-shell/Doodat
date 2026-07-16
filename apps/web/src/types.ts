@@ -68,6 +68,7 @@ export type Intent =
   | { type: 'SWIPE'; card: ContentCard; actionResponses?: Record<string, string> }
   | { type: 'ADVANCE' } // move to next card (system cards)
   | { type: 'NAVIGATE'; index: number } // jump to a specific deck position (free navigation)
+  | { type: 'STEP'; delta: 1 | -1 } // move to the adjacent content card (swipe navigation)
   | { type: 'DAILY_RESET'; date: string }
   | { type: 'RESET_DAY_TO_WIZARD' };
 

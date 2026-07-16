@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { reduce, initialState, dayBefore, buildDailyDeck } from './reducer';
-import type { AppState, UserProfile, StreakState } from '../types';
+import { reduce, initialState, dayBefore, buildDailyDeck, adjacentContentIndex } from './reducer';
+import type { AppState, UserProfile, StreakState, DeckCard, SystemCardType } from '../types';
 import type { UserPreferences } from '@doodat/cards';
 import { dealDailyCards } from '@doodat/cards';
 
@@ -223,6 +223,78 @@ describe('ADVANCE', () => {
     const lastIndex = s.deck.length - 1;
     const next = reduce(makeState({ currentIndex: lastIndex }), { type: 'ADVANCE' });
     expect(next.currentIndex).toBe(lastIndex);
+  });
+});
+
+describe('STEP (swipe navigation between content cards)', () => {
+  // Deterministic deck: [intensity_select, c0, c1, c2, completion]
+  const content = (id: string) => ({ id, type: 'content' }) as unknown as DeckCard;
+  const sys = (id: string, type: SystemCardType) => ({ id, type }) as unknown as DeckCard;
+  const stepDeck = () => [
+    sys('sys-int', 'intensity_select'),
+    content('c0'),
+    content('c1'),
+    content('c2'),
+    sys('sys-comp', 'completion'),
+  ];
+
+  it('moves forward to the next content card', () => {
+    const s = makeState({ deck: stepDeck(), currentIndex: 1 }); // on c0
+    const next = reduce(s, { type: 'STEP', delta: 1 });
+    expect(next.currentIndex).toBe(2); // c1
+  });
+
+  it('moves backward to the previous content card', () => {
+    const s = makeState({ deck: stepDeck(), currentIndex: 3 }); // on c2
+    const next = reduce(s, { type: 'STEP', delta: -1 });
+    expect(next.currentIndex).toBe(2); // c1
+  });
+
+  it('skips a system card when stepping forward', () => {
+    // From intensity_select (index 0) forward → first content card c0 (index 1)
+    const s = makeState({ deck: stepDeck(), currentIndex: 0 });
+    const next = reduce(s, { type: 'STEP', delta: 1 });
+    expect(next.currentIndex).toBe(1);
+  });
+
+  it('is a no-op at the last content card (forward boundary)', () => {
+    const s = makeState({ deck: stepDeck(), currentIndex: 3 }); // on c2, last content
+    const next = reduce(s, { type: 'STEP', delta: 1 });
+    expect(next.currentIndex).toBe(3);
+    expect(next).toBe(s); // same reference — true no-op
+  });
+
+  it('is a no-op at the first content card (backward boundary)', () => {
+    const s = makeState({ deck: stepDeck(), currentIndex: 1 }); // on c0, first content
+    const next = reduce(s, { type: 'STEP', delta: -1 });
+    expect(next.currentIndex).toBe(1);
+    expect(next).toBe(s); // same reference — true no-op
+  });
+
+  it('does not record an outcome (pure navigation)', () => {
+    const s = makeState({ deck: stepDeck(), currentIndex: 1, daily: { date: DATE, outcomes: [] } });
+    const next = reduce(s, { type: 'STEP', delta: 1 });
+    expect(next.daily.outcomes).toEqual([]);
+  });
+});
+
+describe('adjacentContentIndex', () => {
+  const content = (id: string) => ({ id, type: 'content' }) as unknown as DeckCard;
+  const sys = (id: string) => ({ id, type: 'completion' }) as unknown as DeckCard;
+
+  it('returns null forward when only a system card lies ahead', () => {
+    const deck: DeckCard[] = [content('a'), sys('x')];
+    expect(adjacentContentIndex(deck, 0, 1)).toBeNull();
+  });
+
+  it('returns null backward when no content card lies behind', () => {
+    const deck: DeckCard[] = [sys('x'), content('a')];
+    expect(adjacentContentIndex(deck, 1, -1)).toBeNull();
+  });
+
+  it('finds the nearest content card forward, skipping system cards', () => {
+    const deck: DeckCard[] = [content('a'), sys('x'), content('b')];
+    expect(adjacentContentIndex(deck, 0, 1)).toBe(2);
   });
 });
 

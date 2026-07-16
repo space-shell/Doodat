@@ -79,6 +79,27 @@ function recomputeStreak(streak: StreakState, outcomes: CardOutcome[], today: st
 // ─── Navigation helpers ───────────────────────────────────────────────────────
 
 /**
+ * Find the index of the nearest content card in `delta` direction (+1 forward,
+ * -1 back) from `fromIndex`, skipping system cards. Returns null if there is
+ * no content card in that direction (i.e. `fromIndex` is at a content-card
+ * boundary). Used by the STEP intent (swipe navigation).
+ *
+ * Unlike `nextUnresolvedIndex`, this ignores completion status — it is pure
+ * browsing, so a forward swipe can land on an already-completed card.
+ */
+export function adjacentContentIndex(deck: DeckCard[], fromIndex: number, delta: 1 | -1): number | null {
+  if (delta > 0) {
+    for (let i = fromIndex + 1; i < deck.length; i++) {
+      if (isContentCard(deck[i])) return i;
+    }
+  } else {
+    for (let i = fromIndex - 1; i >= 0; i--) {
+      if (isContentCard(deck[i])) return i;
+    }
+  }
+  return null;
+}
+/**
  * Find the next unresolved content card, scanning forward from `fromIndex`
  * then wrapping. Falls back to the completion card if all are resolved.
  */
@@ -141,6 +162,11 @@ export function reduce(state: AppState, intent: Intent): AppState {
         currentIndex: Math.max(0, Math.min(intent.index, state.deck.length - 1)),
       };
 
+    case 'STEP': {
+      const next = adjacentContentIndex(state.deck, state.currentIndex, intent.delta);
+      if (next === null) return state; // content-card boundary — true no-op (same reference)
+      return { ...state, currentIndex: next };
+    }
     case 'DAILY_RESET':
       return handleDailyReset(state, intent.date);
 

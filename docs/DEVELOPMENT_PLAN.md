@@ -22,8 +22,8 @@
 - Daily deck dealing (3/6/9 cards based on intensity: Light/Medium/High; balanced across physical/mental/spiritual domains)
 - Card schema v2: per-card `difficulty` (low/medium/high), `sources[]` (citations), `actions[]` (text-input prompts, difficulty-scoped)
 - Volume-based dealing with difficulty distribution (low day: weighted random; medium: 1 high guaranteed; high day: 2–3 high guaranteed, seeded)
-- Complete / skip via button (Done/Skip, no swipe gestures)
-- Free navigation via card number grid (CardNav — tap any number to jump)
+- Complete / skip via button (Done/Skip). Swipe gestures navigate (left = next card, right = previous card) but never complete — completion stays on the Done button.
+- Free navigation via card number grid (CardNav — tap any number to jump) and via swipe gestures on content cards
 - Daily intensity check-in (on day boundary; replaces the former weekly re-commit)
 - Onboarding wizard (welcome → physical prefs → mental prefs → spiritual prefs → intensity; shown on first launch and on settings reset)
 - Accountability card prompt (after 3 skips in a session; once per day)
@@ -97,7 +97,8 @@ These features were not in the phased breakdown but have been implemented:
 - **Card schema v2** — `difficulty` (low/medium/high per card), `sources[]` (citations replacing `passage_ref`/`expanded_link`), `actions[]` (text-input prompts, difficulty-scoped). Migration script `packages/cards/scripts/migrate-v2.mjs`.
 - **Volume-based dealing** — intensity selector controls card count (Light=3, Medium=6, High=9) instead of per-card intensity text. Difficulty distribution biased by volume (low: weighted; medium: 1 high guaranteed; high: seeded 2–3 high).
 - **Daily intensity check-in** — replaced the weekly ISO-week re-commit with a daily check-in (`needsDailyIntensity` checks day boundary, not week boundary).
-- **Free navigation** — CardNav number grid allows jumping to any card. Back/forward buttons removed; navigation is via number grid + swipe auto-advance.
+- **Free navigation** — CardNav number grid allows jumping to any card. Back/forward buttons removed; navigation is via number grid, Done-driven auto-advance, and swipe gestures.
+- **Swipe navigation** — on content cards, a horizontal touch swipe (left = next, right = previous, threshold-fling) hops to the adjacent content card via the `STEP` intent (`adjacentContentIndex` skips system cards; no-op at the first/last content card). Pure browsing: no outcome is recorded. Completion remains on the Done button. Touch only (Pointer Events not used); vertical scrolls inside textareas are preserved.
 - **Settings + reset-to-wizard** — settings button in CardNav; settings view with "reset day to setup wizard" button (`RESET_DAY_TO_WIZARD` intent clears today's outcomes, re-triggers full 5-card wizard).
 - **Two-phase neumorphic transitions** — `neuTransition.ts` with `onEnter`/`onExit` callbacks: children fade → shadow flattens (exit); shadow raises → children fade in (enter). `settledKey` + `isExiting` synchronize CardNav/BottomBar appearance with the transition cycle.
 - **Card browser** — separate `cards.html` entry; review all 90 cards with detail view, radar chart stats, per-card notes (localStorage, filter/export/clear).

@@ -4,6 +4,7 @@ import { getCardTask, type CardAction, type ContentCard as Card } from '@doodat/
 import { emit } from '../streams/intents';
 import { state } from '../store';
 import { haptic } from '../utils/haptics';
+import { createSwipeHandlers } from '../utils/swipeNav';
 import TimerButton from './TimerButton';
 
 const DOMAIN_LABEL = { physical: 'Physical', mental: 'Mental', spiritual: 'Spiritual' } as const;
@@ -40,8 +41,22 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
     });
   };
 
+  // Swipe-to-navigate: left = next card, right = previous card. Pure browsing —
+  // records no outcome. Emits STEP; the reducer hops to the adjacent content
+  // card (skipping system cards) and the existing two-phase transition animates.
+  const swipe = createSwipeHandlers((dir) => {
+    haptic(10);
+    emit({ type: 'STEP', delta: dir === 'next' ? 1 : -1 });
+  });
+
   return (
-    <article data-testid="content-card" class="neu-raised w-full max-w-md p-6 flex flex-col flex-1">
+    <article
+      data-testid="content-card"
+      class="neu-raised w-full max-w-md p-6 flex flex-col flex-1 touch-pan-y"
+      onTouchStart={swipe.onTouchStart}
+      onTouchMove={swipe.onTouchMove}
+      onTouchEnd={swipe.onTouchEnd}
+    >
       <header class="flex items-center gap-2 mb-4">
         <span class={`inline-block w-3 h-3 rounded-full ${DOMAIN_DOT[props.card.domain]}`} />
         <span class="text-xs font-semibold tracking-widest uppercase text-dodaat-textMuted">
