@@ -52,7 +52,7 @@ const ContentCardView: Component<{ card: Card }> = (props) => {
   return (
     <article
       data-testid="content-card"
-      class="neu-raised w-full max-w-md p-6 flex flex-col flex-1 touch-pan-y"
+      class="neu-raised swipe-surface w-full max-w-md p-6 flex flex-col flex-1"
       onTouchStart={swipe.onTouchStart}
       onTouchMove={swipe.onTouchMove}
       onTouchEnd={swipe.onTouchEnd}

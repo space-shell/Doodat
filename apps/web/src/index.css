@@ -7,6 +7,7 @@
   body {
     margin: 0;
     min-height: 100vh;
+    overflow-x: hidden;
     background-color: theme('colors.dodaat.background');
     color: theme('colors.dodaat.textPrimary');
     font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -63,5 +64,17 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .neu-fade-in { animation: none; }
+  }
+
+  /* Swipe surface: claim horizontal gestures for JS so the browser never
+     consumes them as horizontal panning. touch-action does NOT inherit, so we
+     apply pan-y to the surface AND its descendants — otherwise a touch that
+     starts on a child (e.g. the task <p>) falls back to `auto` and the browser
+     steals the gesture. The timer button keeps its own touch-action:none
+     (press-hold) via .touch-none, so it is exempted. pan-y still allows native
+     vertical scrolling everywhere, including textareas. */
+  .swipe-surface,
+  .swipe-surface *:not(.touch-none) {
+    touch-action: pan-y;
   }
 }
