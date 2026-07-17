@@ -14,9 +14,21 @@ export const DEFAULT_RELAYS = [
   'wss://relay.primal.net',
 ];
 
-/** The filter that fetches every day-task event for a pubkey on a date. */
+/** Local midnight (00:00) of a YYYY-MM-DD date, as unix seconds. */
+function localMidnightSeconds(date: string): number {
+  return Math.floor(new Date(`${date}T00:00:00`).getTime() / 1000);
+}
+
+/**
+ * The relay query for a pubkey's day-tasks on a date. Uses ONLY indexed fields
+ * (kinds, authors, since) — relays do not index arbitrary tags like `#day`, so
+ * a `#day` filter is rejected as "unindexed tag filter". The `#day` tag is
+ * still carried in each event for a client-side tamper cross-check; exact-date
+ * filtering happens in `mergeDayTasks`. `since` bounds the window to today so
+ * the relay doesn't return the author's entire history.
+ */
 export function dayFilter(pubkey: string, date: string) {
-  return { kinds: [DAY_TASK_KIND], authors: [pubkey], '#day': [date] };
+  return { kinds: [DAY_TASK_KIND], authors: [pubkey], since: localMidnightSeconds(date) };
 }
 
 /**
@@ -24,10 +36,12 @@ export function dayFilter(pubkey: string, date: string) {
  *
  * Per NIP-33 replaceable semantics, when several events share a `d` tag
  * (same date+taskId) the highest-`created_at` wins. Signatures are verified,
- * then each surviving event is decoded; invalid events are dropped. Output is
- * sorted ascending by `order` so every device renders the tasks identically.
+ * then each surviving event is decoded; invalid events are dropped. When `date`
+ * is given, tasks are filtered to that exact date (client-side, since the relay
+ * can't). Output is sorted ascending by `order` so every device renders the
+ * tasks identically.
  */
-export function mergeDayTasks(events: Event[]): DayTask[] {
+export function mergeDayTasks(events: Event[], date?: string): DayTask[] {
   const latest = new Map<string, Event>();
   for (const e of events) {
     if (e.kind !== DAY_TASK_KIND) continue;
@@ -41,7 +55,7 @@ export function mergeDayTasks(events: Event[]): DayTask[] {
   const tasks: DayTask[] = [];
   for (const e of latest.values()) {
     const t = decodeDayTask(e);
-    if (t) tasks.push(t);
+    if (t && (!date || t.date === date)) tasks.push(t);
   }
   tasks.sort((a, b) => a.order - b.order);
   return tasks;
@@ -56,7 +70,7 @@ export async function fetchDayTasks(
   timeoutMs = 10_000,
 ): Promise<DayTask[]> {
   const events = await pool.querySync(relays, dayFilter(pubkey, date), { maxWait: timeoutMs });
-  return mergeDayTasks(events);
+  return mergeDayTasks(events, date);
 }
 
 /** Publish (or update) a single day-task. Returns the relays that accepted it. */

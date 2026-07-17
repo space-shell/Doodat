@@ -27,12 +27,17 @@ function plain(e: Event): Event {
 }
 
 describe('dayFilter', () => {
-  it('scopes by kind, author, and #day', () => {
-    expect(dayFilter('pk123', '2026-07-16')).toEqual({
-      kinds: [30018],
-      authors: ['pk123'],
-      '#day': ['2026-07-16'],
-    });
+  it('scopes by kind + author + since, with no unindexed #day tag', () => {
+    const f = dayFilter('pk123', '2026-07-16');
+    expect(f.kinds).toEqual([30018]);
+    expect(f.authors).toEqual(['pk123']);
+    expect('#day' in f).toBe(false); // relays reject unindexed tag filters
+    expect(typeof f.since).toBe('number'); // since bounds to today's window
+  });
+
+  it('since is local midnight of the date', () => {
+    const since = dayFilter('pk', '2026-07-16').since;
+    expect(since).toBe(Math.floor(new Date('2026-07-16T00:00:00').getTime() / 1000));
   });
 });
 
@@ -102,5 +107,18 @@ describe('mergeDayTasks', () => {
 
   it('returns an empty array for no events', () => {
     expect(mergeDayTasks([])).toEqual([]);
+  });
+
+  it('filters to an exact date when given (client-side, since relays cannot)', () => {
+    const today = sign(
+      buildDayTaskTemplate('2026-07-16', 'phys-003', { status: 'todo', order: 0, intensity: 'medium' }, 1000),
+    );
+    const yesterday = sign(
+      buildDayTaskTemplate('2026-07-15', 'phys-004', { status: 'todo', order: 0, intensity: 'medium' }, 1000),
+    );
+    expect(mergeDayTasks([today, yesterday], '2026-07-16').map((t) => t.taskId)).toEqual(['phys-003']);
+    expect(mergeDayTasks([today, yesterday], '2026-07-15').map((t) => t.taskId)).toEqual(['phys-004']);
+    // no date → returns everything
+    expect(mergeDayTasks([today, yesterday]).map((t) => t.taskId).sort()).toEqual(['phys-003', 'phys-004']);
   });
 });
