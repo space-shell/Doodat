@@ -5,7 +5,7 @@
  * permanently-true flag — that is dead conditional code.
  */
 export const FLAGS = {
-  NOSTR_IDENTITY: false, // per-task day-sync over Nostr; key mgmt in Settings
+  NOSTR_IDENTITY: true, // per-task day-sync over Nostr; key mgmt in Settings // overridden by owner
   TIME_OF_DAY_REVEAL: false, // RxJS-driven card unlock at ritual times
   GOLD_CARDS: false, // voice-note social layer
   PRESTIGE_BADGES: false,
